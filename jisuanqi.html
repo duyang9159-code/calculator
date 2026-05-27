@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>实验计算工具箱 | 模块化实验室助手 (附使用指南)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
+        }
+
+        body {
+            background: #eef2f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            background: #f9fbfd;
+            border-bottom: 1px solid #e2edf2;
+            padding: 0 16px;
+            gap: 6px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 16px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #4a627a;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 32px 32px 0 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            background: #e6f0fa;
+            color: #1e5a88;
+        }
+
+        .tab-btn.active {
+            color: #0f62ac;
+            background: white;
+            border-bottom: 3px solid #0f62ac;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.02);
+        }
+
+        .module-pane {
+            display: none;
+            padding: 28px 32px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .module-pane.active-pane {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e4663;
+            margin-bottom: 1.2rem;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #cbdde9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sub-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e9f0;
+            padding-bottom: 8px;
+        }
+        .sub-tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #5a6e7c;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: 0.2s;
+        }
+        .sub-tab-btn.active-sub {
+            background: #e7f0fa;
+            color: #0f62ac;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .sub-pane {
+            display: none;
+        }
+        .sub-pane.active-sub-pane {
+            display: block;
+        }
+
+        .input-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 28px;
+            background: #fafdff;
+            padding: 18px 20px;
+            border-radius: 28px;
+            border: 1px solid #e9f0f5;
+        }
+
+        .input-field {
+            flex: 1 1 160px;
+            min-width: 140px;
+        }
+
+        .input-field label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            color: #2c6280;
+            margin-bottom: 6px;
+        }
+
+        .input-field input, .input-field select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #bfd6e4;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            background: white;
+            transition: 0.2s;
+        }
+
+        .input-field input:focus, .input-field select:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+
+        .result-panel {
+            background: #f1f6fc;
+            border-radius: 24px;
+            padding: 18px 24px;
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            align-items: baseline;
+        }
+
+        .result-badge {
+            background: white;
+            border-radius: 40px;
+            padding: 6px 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .result-badge strong {
+            color: #1c608b;
+        }
+
+        .result-badge span {
+            font-weight: 800;
+            color: #0d3550;
+            margin-left: 8px;
+        }
+
+        .note {
+            font-size: 0.7rem;
+            color: #5f7f9a;
+            margin-top: 14px;
+            padding-left: 10px;
+            border-left: 3px solid #b9d4f0;
+        }
+
+        .inline-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .sub-card {
+            flex: 1;
+            background: #ffffffcc;
+            border-radius: 20px;
+        }
+
+        .fragment-card {
+            background: #fef9e8;
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-left: 4px solid #f0b37b;
+        }
+
+        .fragments-container {
+            margin: 15px 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 700px) {
+            .module-pane {
+                padding: 20px 16px;
+            }
+            .tab-btn {
+                padding: 12px 14px;
+                font-size: 0.8rem;
+            }
+        }
+        .plasmid-dynamic {
+            background: #fafbff;
+            border-radius: 24px;
+            padding: 12px;
+            margin: 12px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .calc-steps {
+            font-size: 0.75rem;
+            color: #2c5f8a;
+            margin-top: 8px;
+            width: 100%;
+            background: #e6f0f9;
+            padding: 8px 12px;
+            border-radius: 28px;
+        }
+        .unit-hint {
+            font-size: 0.65rem;
+            color: #4a7c9c;
+            margin-left: 4px;
+        }
+        /* 使用指南样式 */
+        .guide-section {
+            background: #f0f4fa;
+            border-top: 2px solid #cbdde9;
+            padding: 24px 32px;
+            margin-top: 0;
+        }
+        .guide-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e4663;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .guide-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .guide-card {
+            background: white;
+            border-radius: 20px;
+            padding: 16px 20px;
+            flex: 1 1 280px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .guide-card h4 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #0f62ac;
+            border-left: 3px solid #0f62ac;
+            padding-left: 10px;
+        }
+        .guide-card p {
+            font-size: 0.8rem;
+            color: #2c5a7a;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+        .guide-card ul {
+            margin-left: 20px;
+            font-size: 0.75rem;
+            color: #3a6e8c;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="nav-tabs">
+        <button class="tab-btn active" data-module="cell">🔬 细胞计数</button>
+        <button class="tab-btn" data-module="recomb">🧬 多片段重组</button>
+        <button class="tab-btn" data-module="plating">🧫 铺板计算</button>
+        <button class="tab-btn" data-module="transfect">⚡ 转染体系</button>
+        <button class="tab-btn" data-module="solution">🧴 溶液配制</button>
+        <button class="tab-btn" data-module="pcr">🧬 PCR 预混液</button>
+    </div>
+
+    <!-- 模块1: 细胞计数 -->
+    <div id="module-cell" class="module-pane active-pane">
+        <div class="section-title">🔬 细胞计数 & 浓度调节 <span style="font-size:0.8rem; background:#eef2ff; padding:2px 12px; border-radius:40px;">血球计数板公式</span></div>
+        <div class="sub-tabs">
+            <button class="sub-tab-btn active-sub" data-sub="adj">📌 浓度调整</button>
+            <button class="sub-tab-btn" data-sub="obtain">📥 细胞获取</button>
+        </div>
+        <div id="sub_adj" class="sub-pane active-sub-pane">
+            <div class="input-grid">
+                <div class="input-field"><label>四角总数 (个)</label><input type="number" id="adj_total" value="88" step="1"></div>
+                <div class="input-field"><label>稀释倍数</label><input type="number" id="adj_dilution" value="100" step="1"></div>
+                <div class="input-field"><label>当前体积 (mL)</label><input type="number" id="adj_vol" value="5" step="0.1"></div>
+                <div class="input-field"><label>目的浓度 (10⁶/mL)</label><input type="number" id="adj_target_conc" value="1" step="0.1"></div>
+            </div>
+            <div class="result-panel" id="adjResult"></div>
+        </div>
+        <div id="sub_obtain" class="sub-pane">
+            <div class="input-grid">
+                <div class="input-field"><label>四角总数 (个)</label><input type="number" id="get_total" value="88" step="1"></div>
+                <div class="input-field"><label>稀释倍数</label><input type="number" id="get_dilution" value="100" step="1"></div>
+                <div class="input-field"><label>当前体积 (mL)</label><input type="number" id="get_vol" value="5" step="0.1"></div>
+                <div class="input-field"><label>所需细胞数 (10⁶个)</label><input type="number" id="need_cells" value="10" step="0.5"></div>
+            </div>
+            <div class="result-panel" id="getResult"></div>
+        </div>
+        <div class="note">💡 细胞浓度(10⁶/mL) = (四角总数/4)×10000×稀释倍数 / 1,000,000 &nbsp; 额外体积 = 终体积 - 当前体积</div>
+    </div>
+
+    <!-- 模块2: 多片段同源重组 -->
+    <div id="module-recomb" class="module-pane">
+        <div class="section-title">🧬 多片段同源重组 <span>载体 + 1~5个片段 | 摩尔比计算</span></div>
+        <div class="input-grid">
+            <div class="input-field"><label>载体长度 (bp)</label><input type="number" id="hr_vector_bp" value="12000" step="100"></div>
+            <div class="input-field"><label>载体浓度 (ng/μL)</label><input type="number" id="hr_vector_conc" value="1000" step="10"></div>
+            <div class="input-field"><label>载体质量 (ng)</label><input type="number" id="hr_vector_mass" value="100" step="10"></div>
+            <div class="input-field"><label>片段个数</label><select id="fragment_count">
+                <option value="1">1 个片段</option>
+                <option value="2">2 个片段</option>
+                <option value="3" selected>3 个片段 (推荐)</option>
+                <option value="4">4 个片段</option>
+                <option value="5">5 个片段</option>
+            </select></div>
+        </div>
+        <div id="fragments_container" class="fragments-container"></div>
+        <div class="result-panel" id="multiFragmentResult"></div>
+        <div class="note">📐 每个片段所需质量(ng) = (载体质量/载体bp) × 片段摩尔倍数 × 片段bp &nbsp; 体积(μL) = 质量/浓度。载体体积 = 载体质量/载体浓度。</div>
+    </div>
+
+    <!-- 模块3: 铺板计算 (含10cm皿面积78.5 cm²) -->
+    <div id="module-plating" class="module-pane">
+        <div class="section-title">🧫 铺板计算 <span>不同规格孔板 & 10cm培养皿</span></div>
+        <div class="input-grid">
+            <div class="input-field"><label>培养容器类型</label><select id="plate_type">
+                <option value="6">6孔板 (9.6 cm², 2 mL)</option>
+                <option value="12">12孔板 (3.8 cm², 1 mL)</option>
+                <option value="24">24孔板 (1.9 cm², 0.5 mL)</option>
+                <option value="48">48孔板 (0.7 cm², 0.2 mL)</option>
+                <option value="96">96孔板 (0.3 cm², 0.1 mL)</option>
+                <option value="10cm">10 cm 培养皿 (78.5 cm², 10 mL)</option>
+            </select></div>
+            <div class="input-field"><label>每个孔/皿面积 (cm²)</label><input type="number" id="area_per_well" value="9.6" step="0.1"></div>
+            <div class="input-field"><label>单孔/皿培养基体积 (mL)</label><input type="number" id="med_per_well" value="2" step="0.1"></div>
+            <div class="input-field"><label>培养瓶面积 (cm²)</label><input type="number" id="flask_area" value="75" step="5"></div>
+            <div class="input-field"><label>培养瓶汇合度 (%)</label><input type="number" id="flask_confluence" value="90" step="5"></div>
+            <div class="input-field"><label>所需孔/皿数</label><input type="number" id="target_wells" value="4" step="1"></div>
+            <div class="input-field"><label>接种汇合度 (%)</label><input type="number" id="seed_confluence" value="60" step="5"></div>
+            <div class="input-field"><label>重悬体积 (mL)</label><input type="number" id="resuspend_vol" value="2" step="0.5"></div>
+        </div>
+        <div class="result-panel" id="platingResult"></div>
+        <div class="note">🔁 所需悬液体积(μL) = [ (孔数×孔面积×接种汇合%) / (瓶面积×瓶汇合%) ] × 重悬体积 × 1000</div>
+    </div>
+
+    <!-- 模块4: 转染体系 -->
+    <div id="module-transfect" class="module-pane">
+        <div class="section-title">⚡ 转染复合物计算 <span>质粒DNA (μg) & PEI 体积</span></div>
+        <div class="input-grid" style="justify-content: space-between;">
+            <div class="input-field"><label>质粒数量</label><select id="plasmid_count">
+                <option value="1">单质粒</option>
+                <option value="2">双质粒</option>
+                <option value="3" selected>三质粒</option>
+                <option value="4">四质粒</option>
+                <option value="5">五质粒</option>
+            </select></div>
+            <div class="input-field"><label>PEI/DNA 比值 (μL/μg)</label><input type="number" id="pei_ratio" value="2.5" step="0.1"></div>
+        </div>
+        <div id="plasmids_inputs" class="plasmid-dynamic"></div>
+        <div class="result-panel" id="transfectionResult" style="flex-direction: column; gap: 12px;"></div>
+        <div class="note">💡 质粒体积(μL) = (质量(μg) × 1000) / 浓度(ng/μL) &nbsp; PEI体积 = 总DNA质量(μg) × PEI/DNA比值</div>
+    </div>
+
+    <!-- 模块5: 溶液配制 -->
+    <div id="module-solution" class="module-pane">
+        <div class="section-title">🧴 溶液稀释计算 <span>支持多单位自动换算</span></div>
+        <div class="input-grid">
+            <div class="input-field">
+                <label>母液浓度</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="number" id="stock_conc_val" value="10" step="any" style="flex:2;">
+                    <select id="stock_conc_unit" style="flex:1;">
+                        <option value="mg_per_ml">mg/mL</option>
+                        <option value="ug_per_ml">μg/mL</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>目的浓度</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="number" id="target_conc_val" value="8" step="any" style="flex:2;">
+                    <select id="target_conc_unit" style="flex:1;">
+                        <option value="ug_per_ml">μg/mL</option>
+                        <option value="mg_per_ml">mg/mL</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>目的体积</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="number" id="target_vol_val" value="50" step="any" style="flex:2;">
+                    <select id="target_vol_unit" style="flex:1;">
+                        <option value="ml">mL</option>
+                        <option value="ul">μL</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="result-panel" id="solutionResult" style="flex-direction: column; gap: 12px;"></div>
+        <div class="note">📌 换算原理：统一将浓度换算为 μg/mL，体积换算为 μL。所需母液(μL) = (目的体积(μL) × 目的浓度(μg/mL)) / 母液浓度(μg/mL)。稀释液体积 = 目的体积 − 母液体积，单位与目的体积保持一致。</div>
+    </div>
+
+    <!-- 模块6: PCR 预混液 (体积单位均为 μL) -->
+    <div id="module-pcr" class="module-pane">
+        <div class="section-title">🧬 PCR 反应Mix <span>批量配置 (体积单位: μL)</span></div>
+        <div class="input-grid">
+            <div class="input-field"><label>样本数 (反应数)</label><input type="number" id="pcr_samples" value="5" step="1"></div>
+            <div class="input-field"><label>单反应体系 (μL)</label><input type="number" id="pcr_sys" value="10" step="1"></div>
+            <div class="input-field"><label>聚合酶体积 (μL/反应)</label><input type="number" id="pcr_pol" value="5" step="0.5"></div>
+            <div class="input-field"><label>上游引物体积 (μL/反应)</label><input type="number" id="pcr_fwd" value="1" step="0.2"></div>
+            <div class="input-field"><label>下游引物体积 (μL/反应)</label><input type="number" id="pcr_rev" value="1" step="0.2"></div>
+            <div class="input-field"><label>模板体积 (μL/反应)</label><input type="number" id="pcr_temp" value="1" step="0.2"></div>
+        </div>
+        <div class="result-panel" id="pcrResult"></div>
+        <div class="note">🧪 各组分总体积(μL) = 样本数 × 单反应体积；ddH₂O体积(μL) = 总体系 − (酶+引物+模板)总体积。所有体积单位均为 μL。</div>
+    </div>
+
+    <!-- 新增：使用指南栏 -->
+    <div class="guide-section">
+        <div class="guide-title">📖 使用指南 & 常见问题</div>
+        <div class="guide-grid">
+            <div class="guide-card">
+                <h4>🔬 细胞计数</h4>
+                <p><strong>浓度调整</strong>：输入计数板四角总数、稀释倍数、当前悬液体积和目标浓度，可算出需加入/移除的液体体积。</p>
+                <p><strong>细胞获取</strong>：根据所需细胞数（10⁶），自动计算应从当前悬液中吸取的体积。</p>
+                <ul><li>公式：细胞浓度(10⁶/mL) = (四角总数/4) × 10000 × 稀释倍数 / 1e6</li></ul>
+            </div>
+            <div class="guide-card">
+                <h4>🧬 多片段重组</h4>
+                <p>设定载体长度/浓度/质量，以及1~5个片段的各自长度、浓度和摩尔比（相对于载体）。计算各片段所需质量(ng)和体积(μL)。</p>
+                <ul><li>质量计算：(载体质量/载体bp) × 片段摩尔比 × 片段bp</li><li>体积 = 质量 / 浓度</li></ul>
+            </div>
+            <div class="guide-card">
+                <h4>🧫 铺板计算</h4>
+                <p>选择孔板类型（或10 cm皿），输入培养瓶面积/汇合度、所需孔数、接种汇合度及重悬体积，得到所需细胞悬液体积和补液量。</p>
+                <ul><li>公式：所需悬液(μL) = (孔数×孔面积×接种汇合%) / (瓶面积×瓶汇合%) × 重悬体积 × 1000</li></ul>
+            </div>
+            <div class="guide-card">
+                <h4>⚡ 转染体系</h4>
+                <p>选择质粒数量（1~5），输入每个质粒的质量(μg)和浓度(ng/μL)，以及PEI/DNA比值。自动计算总DNA质量、PEI体积及各质粒体积。</p>
+                <ul><li>质粒体积(μL) = (质量 × 1000) / 浓度</li><li>PEI体积 = 总DNA质量 × 比值</li></ul>
+            </div>
+            <div class="guide-card">
+                <h4>🧴 溶液配制</h4>
+                <p>支持母液浓度(mg/mL或μg/mL)、目的浓度(μg/mL或mg/mL)、目的体积(mL或μL)自动换算。输出所需母液体积(μL)和稀释液体积。</p>
+                <ul><li>核心公式：C₁V₁ = C₂V₂（统一换算至μg/mL和μL）</li></ul>
+            </div>
+            <div class="guide-card">
+                <h4>🧬 PCR 预混液</h4>
+                <p>输入样本数、单反应体系及各组分体积(μL/反应)，自动计算批量配制的总体积和ddH₂O补足体积。</p>
+                <ul><li>各组分总体积 = 样本数 × 单反应体积</li><li>ddH₂O = 总体系 − (酶+引物+模板)总体积</li></ul>
+            </div>
+        </div>
+        <div class="note" style="margin-top: 16px; background: #e6f0f9; border-left-color: #0f62ac;">✅ 所有模块均实时计算，修改任意输入后结果自动更新。如有疑问，请核对输入单位和公式逻辑。</div>
+    </div>
+</div>
+
+<script>
+    // ======================= 模块切换（主模块） =======================
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.module-pane');
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const module = btn.getAttribute('data-module');
+            tabs.forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            panes.forEach(pane => pane.classList.remove('active-pane'));
+            document.getElementById(`module-${module}`).classList.add('active-pane');
+            if (module === 'transfect') renderPlasmidInputs(true);
+            if (module === 'recomb') renderFragments();
+            if (module === 'cell') {
+                updateConcentrationAdjust();
+                updateCellObtain();
+            }
+        });
+    });
+
+    // 细胞计数子页面切换
+    const subTabs = document.querySelectorAll('.sub-tab-btn');
+    const subPanes = document.querySelectorAll('.sub-pane');
+    function switchSubPane(subId) {
+        subPanes.forEach(pane => pane.classList.remove('active-sub-pane'));
+        document.getElementById(`sub_${subId}`).classList.add('active-sub-pane');
+        subTabs.forEach(btn => {
+            if (btn.getAttribute('data-sub') === subId) {
+                btn.classList.add('active-sub');
+            } else {
+                btn.classList.remove('active-sub');
+            }
+        });
+    }
+    subTabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sub = btn.getAttribute('data-sub');
+            switchSubPane(sub);
+            if (sub === 'adj') updateConcentrationAdjust();
+            if (sub === 'obtain') updateCellObtain();
+        });
+    });
+
+    // ========= 1. 细胞计数 =========
+    function updateConcentrationAdjust() {
+        let total = parseFloat(document.getElementById('adj_total').value) || 0;
+        let dilution = parseFloat(document.getElementById('adj_dilution').value) || 1;
+        let curVol = parseFloat(document.getElementById('adj_vol').value) || 0;
+        let targetConc = parseFloat(document.getElementById('adj_target_conc').value) || 0;
+        let currentConc = ((total / 4) * 10000 * dilution) / 1000000;
+        let totalCells = curVol * currentConc;
+        let finalVol = (targetConc > 0) ? (totalCells / targetConc) : 0;
+        let extraVol = finalVol - curVol;
+        document.getElementById('adjResult').innerHTML = `
+            <div class="result-badge"><strong>当前细胞浓度</strong><span>${currentConc.toFixed(3)} ×10⁶/mL</span></div>
+            <div class="result-badge"><strong>总细胞数</strong><span>${totalCells.toFixed(2)} ×10⁶</span></div>
+            <div class="result-badge"><strong>所需终体积</strong><span>${finalVol.toFixed(2)} mL</span></div>
+            <div class="result-badge"><strong>额外所需体积</strong><span>${extraVol.toFixed(2)} mL</span></div>
+        `;
+    }
+    function updateCellObtain() {
+        let total = parseFloat(document.getElementById('get_total').value) || 0;
+        let dilution = parseFloat(document.getElementById('get_dilution').value) || 1;
+        let curVol = parseFloat(document.getElementById('get_vol').value) || 0;
+        let needCells = parseFloat(document.getElementById('need_cells').value) || 0;
+        let currentConc = ((total / 4) * 10000 * dilution) / 1000000;
+        let requiredVol = (currentConc > 0) ? (needCells / currentConc) : 0;
+        document.getElementById('getResult').innerHTML = `
+            <div class="result-badge"><strong>当前浓度</strong><span>${currentConc.toFixed(3)} ×10⁶/mL</span></div>
+            <div class="result-badge"><strong>所需当前浓度体积</strong><span>${requiredVol.toFixed(2)} mL</span></div>
+            ${currentConc === 0 ? '<div class="result-badge">⚠️ 细胞浓度为零，请检查计数</div>' : ''}
+        `;
+    }
+
+    // ========= 2. 多片段同源重组 =========
+    let currentFragmentCount = 3;
+    function renderFragments() {
+        let count = parseInt(document.getElementById('fragment_count').value);
+        if (isNaN(count)) count = 3;
+        currentFragmentCount = count;
+        const container = document.getElementById('fragments_container');
+        let oldVals = [];
+        for (let i = 1; i <= 5; i++) {
+            let bpEl = document.getElementById(`frag${i}_bp`);
+            let concEl = document.getElementById(`frag${i}_conc`);
+            let ratioEl = document.getElementById(`frag${i}_ratio`);
+            if (bpEl && concEl && ratioEl) {
+                oldVals.push({ bp: bpEl.value, conc: concEl.value, ratio: ratioEl.value });
+            } else {
+                oldVals.push(null);
+            }
+        }
+        container.innerHTML = '';
+        for (let i = 1; i <= count; i++) {
+            const defaultBp = (i === 1 ? 2000 : (i === 2 ? 1500 : (i === 3 ? 800 : (i === 4 ? 600 : 400))));
+            const defaultConc = (i === 1 ? 500 : (i === 2 ? 400 : (i === 3 ? 300 : (i === 4 ? 250 : 200))));
+            const defaultRatio = (i === 1 ? 2 : (i === 2 ? 2 : (i === 3 ? 2 : 2)));
+            const saved = oldVals[i-1];
+            const bpVal = (saved && saved.bp) ? saved.bp : defaultBp;
+            const concVal = (saved && saved.conc) ? saved.conc : defaultConc;
+            const ratioVal = (saved && saved.ratio) ? saved.ratio : defaultRatio;
+            const fragDiv = document.createElement('div');
+            fragDiv.className = 'fragment-card';
+            fragDiv.innerHTML = `
+                <div style="font-weight:600; margin-bottom:8px;">📌 片段 ${i}</div>
+                <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <div class="input-field" style="flex:1;"><label>长度 (bp)</label><input type="number" id="frag${i}_bp" value="${bpVal}" step="10"></div>
+                    <div class="input-field" style="flex:1;"><label>浓度 (ng/μL)</label><input type="number" id="frag${i}_conc" value="${concVal}" step="5"></div>
+                    <div class="input-field" style="flex:1;"><label>摩尔比 (相对于载体)</label><input type="number" id="frag${i}_ratio" value="${ratioVal}" step="0.5"></div>
+                </div>
+            `;
+            container.appendChild(fragDiv);
+        }
+        for (let i = 1; i <= count; i++) {
+            const bpInp = document.getElementById(`frag${i}_bp`);
+            const concInp = document.getElementById(`frag${i}_conc`);
+            const ratioInp = document.getElementById(`frag${i}_ratio`);
+            if (bpInp) bpInp.addEventListener('input', updateMultiFragment);
+            if (concInp) concInp.addEventListener('input', updateMultiFragment);
+            if (ratioInp) ratioInp.addEventListener('input', updateMultiFragment);
+        }
+        updateMultiFragment();
+    }
+    function updateMultiFragment() {
+        let vecBp = parseFloat(document.getElementById('hr_vector_bp').value) || 1;
+        let vecConc = parseFloat(document.getElementById('hr_vector_conc').value) || 1;
+        let vecMass = parseFloat(document.getElementById('hr_vector_mass').value) || 0;
+        let count = currentFragmentCount;
+        let fragments = [];
+        let valid = true;
+        for (let i = 1; i <= count; i++) {
+            let bp = parseFloat(document.getElementById(`frag${i}_bp`)?.value);
+            let conc = parseFloat(document.getElementById(`frag${i}_conc`)?.value);
+            let ratio = parseFloat(document.getElementById(`frag${i}_ratio`)?.value);
+            if (isNaN(bp) || bp <= 0) { valid = false; bp = 1; }
+            if (isNaN(conc) || conc <= 0) { valid = false; conc = 1; }
+            if (isNaN(ratio)) ratio = 1;
+            fragments.push({ idx: i, bp, conc, ratio });
+        }
+        let vectorVol = vecMass / vecConc;
+        let resultsHTML = `<div class="result-badge"><strong>载体体积</strong><span>${vectorVol.toFixed(2)} μL (${vecMass} ng)</span></div>`;
+        let totalFragMass = 0;
+        fragments.forEach(f => {
+            let requiredMass = (vecMass / vecBp) * f.ratio * f.bp;
+            let requiredVol = requiredMass / f.conc;
+            totalFragMass += requiredMass;
+            resultsHTML += `<div class="result-badge"><strong>片段 ${f.idx}</strong><span>所需质量 ${requiredMass.toFixed(1)} ng &nbsp;|&nbsp; 体积 ${requiredVol.toFixed(2)} μL (摩尔比 ${f.ratio})</span></div>`;
+        });
+        if (!valid) resultsHTML += `<div class="result-badge">⚠️ 片段长度/浓度不能为零，已自动修正</div>`;
+        resultsHTML += `<div class="result-badge"><strong>总片段DNA质量</strong><span>${totalFragMass.toFixed(1)} ng</span></div>`;
+        document.getElementById('multiFragmentResult').innerHTML = resultsHTML;
+    }
+
+    // ========= 3. 铺板计算 =========
+    function updatePlating() {
+        let plateSelect = document.getElementById('plate_type').value;
+        const areaMap = {6:9.6, 12:3.8, 24:1.9, 48:0.7, 96:0.3, "10cm":78.5};
+        const volMap = {6:2, 12:1, 24:0.5, 48:0.2, 96:0.1, "10cm":10};
+        document.getElementById('area_per_well').value = areaMap[plateSelect];
+        document.getElementById('med_per_well').value = volMap[plateSelect];
+        let areaWell = parseFloat(document.getElementById('area_per_well').value) || 0;
+        let medWell = parseFloat(document.getElementById('med_per_well').value) || 0;
+        let flaskArea = parseFloat(document.getElementById('flask_area').value) || 0;
+        let flaskConf = parseFloat(document.getElementById('flask_confluence').value) || 1;
+        let wells = parseFloat(document.getElementById('target_wells').value) || 0;
+        let seedConf = parseFloat(document.getElementById('seed_confluence').value) || 0;
+        let resusVol = parseFloat(document.getElementById('resuspend_vol').value) || 0;
+        let numerator = wells * areaWell * (seedConf/100);
+        let denominator = flaskArea * (flaskConf/100);
+        let requiredVolUl = 0;
+        if (denominator !== 0 && flaskArea > 0) requiredVolUl = (numerator / denominator) * resusVol * 1000;
+        let perWellVol = wells > 0 ? requiredVolUl/wells : 0;
+        let medPerWellUl = medWell * 1000;
+        let singleMedVol = medPerWellUl - perWellVol;
+        let totalMed = singleMedVol * wells;
+        let containerType = (plateSelect === "10cm") ? "培养皿" : "孔";
+        document.getElementById('platingResult').innerHTML = `
+            <div class="result-badge"><strong>所需细胞悬液体积</strong><span>${requiredVolUl.toFixed(1)} μL</span></div>
+            <div class="result-badge"><strong>单${containerType}接种体积</strong><span>${perWellVol.toFixed(1)} μL</span></div>
+            <div class="result-badge"><strong>单${containerType}补培养基体积</strong><span>${singleMedVol.toFixed(1)} μL</span></div>
+            <div class="result-badge"><strong>所需总培养基</strong><span>${totalMed.toFixed(1)} μL (${(totalMed/1000).toFixed(2)} mL)</span></div>
+        `;
+    }
+
+    // ========= 4. 转染 =========
+    let currentPlasmidCount = 3;
+    function getDefaultMass(idx, total) {
+        if (total === 1) return 4;
+        if (total === 2) return idx === 1 ? 4 : 1;
+        if (total === 3) return idx === 1 ? 4 : (idx === 2 ? 1 : 3);
+        if (total === 4) return idx === 1 ? 4 : 1;
+        if (total === 5) return idx === 1 ? 4 : 1;
+        return 1;
+    }
+    function getDefaultConc(idx, total) {
+        if (total === 1) return 500;
+        if (total === 2) return idx === 1 ? 500 : 300;
+        if (total === 3) return idx === 1 ? 500 : (idx === 2 ? 300 : 200);
+        if (total === 4) return idx === 1 ? 500 : (idx === 2 ? 300 : (idx === 3 ? 200 : 250));
+        if (total === 5) return idx === 1 ? 500 : (idx === 2 ? 300 : (idx === 3 ? 200 : (idx === 4 ? 250 : 250)));
+        return 300;
+    }
+    function renderPlasmidInputs(keepValues = true) {
+        let count = parseInt(document.getElementById('plasmid_count').value);
+        if (isNaN(count)) count = 3;
+        currentPlasmidCount = count;
+        let container = document.getElementById('plasmids_inputs');
+        let oldValues = [];
+        if (keepValues) {
+            for (let i=1; i<=10; i++) {
+                let mEl = document.getElementById(`p${i}_mass`);
+                let cEl = document.getElementById(`p${i}_conc`);
+                if (mEl && cEl) oldValues.push({mass: mEl.value, conc: cEl.value});
+                else oldValues.push(null);
+            }
+        }
+        container.innerHTML = '';
+        for (let i=1; i<=count; i++) {
+            let defaultMass = getDefaultMass(i, count);
+            let defaultConc = getDefaultConc(i, count);
+            let oldMass = (keepValues && oldValues[i-1] && oldValues[i-1].mass !== null) ? oldValues[i-1].mass : defaultMass;
+            let oldConc = (keepValues && oldValues[i-1] && oldValues[i-1].conc !== null) ? oldValues[i-1].conc : defaultConc;
+            let div = document.createElement('div');
+            div.style.background = '#fafaff';
+            div.style.padding = '12px';
+            div.style.borderRadius = '20px';
+            div.style.minWidth = '180px';
+            div.innerHTML = `
+                <div style="font-weight:600; margin-bottom:8px;">🧬 质粒 ${i}</div>
+                <div class="input-field"><label>质量 (μg)</label><input type="number" id="p${i}_mass" value="${oldMass}" step="0.5"></div>
+                <div class="input-field"><label>浓度 (ng/μL)</label><input type="number" id="p${i}_conc" value="${oldConc}" step="10"></div>
+            `;
+            container.appendChild(div);
+        }
+        for (let i=1;i<=count;i++) {
+            let mEl = document.getElementById(`p${i}_mass`);
+            let cEl = document.getElementById(`p${i}_conc`);
+            if(mEl) mEl.addEventListener('input', updateTransfection);
+            if(cEl) cEl.addEventListener('input', updateTransfection);
+        }
+        updateTransfection();
+    }
+    function updateTransfection() {
+        let count = currentPlasmidCount;
+        let totalMass = 0;
+        let volumes = [];
+        for (let i=1;i<=count;i++) {
+            let massInput = document.getElementById(`p${i}_mass`);
+            let concInput = document.getElementById(`p${i}_conc`);
+            if (!massInput || !concInput) continue;
+            let mass = parseFloat(massInput.value);
+            let conc = parseFloat(concInput.value);
+            if (isNaN(mass)) mass = 0;
+            if (isNaN(conc) || conc === 0) conc = 1;
+            totalMass += mass;
+            let vol = (mass * 1000) / conc;
+            volumes.push({idx:i, vol:vol, mass:mass});
+        }
+        let peiRatio = parseFloat(document.getElementById('pei_ratio').value);
+        if (isNaN(peiRatio)) peiRatio = 2.5;
+        let peiVol = totalMass * peiRatio;
+        let html = `<div class="result-badge"><strong>总DNA质量</strong><span>${totalMass.toFixed(2)} μg</span></div>
+                    <div class="result-badge"><strong>PEI体积</strong><span>${peiVol.toFixed(2)} μL</span></div>`;
+        volumes.forEach(v => {
+            html += `<div class="result-badge"><strong>质粒${v.idx}体积</strong><span>${v.vol.toFixed(2)} μL (${v.mass} μg)</span></div>`;
+        });
+        document.getElementById('transfectionResult').innerHTML = html;
+    }
+
+    // ========= 5. 溶液配制 =========
+    function updateSolution() {
+        let stockVal = parseFloat(document.getElementById('stock_conc_val').value);
+        let stockUnit = document.getElementById('stock_conc_unit').value;
+        let targetConcVal = parseFloat(document.getElementById('target_conc_val').value);
+        let targetConcUnit = document.getElementById('target_conc_unit').value;
+        let targetVolVal = parseFloat(document.getElementById('target_vol_val').value);
+        let targetVolUnit = document.getElementById('target_vol_unit').value;
+
+        if (isNaN(stockVal)) stockVal = 0;
+        if (isNaN(targetConcVal)) targetConcVal = 0;
+        if (isNaN(targetVolVal)) targetVolVal = 0;
+
+        let stockConcUgPerMl = stockVal;
+        if (stockUnit === 'mg_per_ml') stockConcUgPerMl = stockVal * 1000;
+
+        let targetConcUgPerMl = targetConcVal;
+        if (targetConcUnit === 'mg_per_ml') targetConcUgPerMl = targetConcVal * 1000;
+
+        let targetVolUl = targetVolVal;
+        if (targetVolUnit === 'ml') targetVolUl = targetVolVal * 1000;
+
+        let requiredStockUl = 0;
+        let diluentVolSameUnit = 0;
+        let formulaStep = '';
+
+        if (stockConcUgPerMl > 0 && targetConcUgPerMl >= 0 && targetVolUl >= 0) {
+            requiredStockUl = (targetVolUl * targetConcUgPerMl) / stockConcUgPerMl;
+            diluentVolSameUnit = targetVolUl - requiredStockUl;
+            formulaStep = `C<sub>母液</sub> = ${stockVal} ${stockUnit === 'mg_per_ml' ? 'mg/mL' : 'μg/mL'} → ${stockConcUgPerMl.toFixed(2)} μg/mL<br>
+                            C<sub>目的</sub> = ${targetConcVal} ${targetConcUnit === 'mg_per_ml' ? 'mg/mL' : 'μg/mL'} → ${targetConcUgPerMl.toFixed(2)} μg/mL<br>
+                            V<sub>目的</sub> = ${targetVolVal} ${targetVolUnit === 'ml' ? 'mL' : 'μL'} → ${targetVolUl.toFixed(2)} μL<br>
+                            所需母液体积 = (V<sub>目的</sub> × C<sub>目的</sub>) / C<sub>母液</sub> = (${targetVolUl.toFixed(2)} × ${targetConcUgPerMl.toFixed(2)}) / ${stockConcUgPerMl.toFixed(2)} = ${requiredStockUl.toFixed(2)} μL`;
+        } else {
+            requiredStockUl = 0;
+            diluentVolSameUnit = 0;
+            formulaStep = '⚠️ 请确保母液浓度、目的浓度、目的体积均为正数';
+        }
+
+        let diluentDisplay = diluentVolSameUnit;
+        let diluentUnitDisplay = targetVolUnit === 'ml' ? 'mL' : 'μL';
+        if (targetVolUnit === 'ml') diluentDisplay = diluentVolSameUnit / 1000;
+
+        document.getElementById('solutionResult').innerHTML = `
+            <div class="result-badge"><strong>所需母液体积</strong><span>${requiredStockUl.toFixed(2)} μL</span></div>
+            <div class="result-badge"><strong>所需稀释液体积</strong><span>${diluentDisplay.toFixed(2)} ${diluentUnitDisplay}</span></div>
+            <div class="calc-steps">📐 计算步骤：<br>${formulaStep}</div>
+        `;
+    }
+
+    // ========= 6. PCR =========
+    function updatePCR() {
+        let samples = parseFloat(document.getElementById('pcr_samples').value) || 0;
+        let sysVol = parseFloat(document.getElementById('pcr_sys').value) || 0;
+        let pol = parseFloat(document.getElementById('pcr_pol').value) || 0;
+        let fwd = parseFloat(document.getElementById('pcr_fwd').value) || 0;
+        let rev = parseFloat(document.getElementById('pcr_rev').value) || 0;
+        let templ = parseFloat(document.getElementById('pcr_temp').value) || 0;
+        let totalPol = pol * samples;
+        let totalFwd = fwd * samples;
+        let totalRev = rev * samples;
+        let totalTemp = templ * samples;
+        let totalSys = samples * sysVol;
+        let ddwater = totalSys - (totalPol + totalFwd + totalRev + totalTemp);
+        document.getElementById('pcrResult').innerHTML = `
+            <div class="result-badge"><strong>聚合酶总体积</strong><span>${totalPol.toFixed(2)} μL</span></div>
+            <div class="result-badge"><strong>上游引物总体积</strong><span>${totalFwd.toFixed(2)} μL</span></div>
+            <div class="result-badge"><strong>下游引物总体积</strong><span>${totalRev.toFixed(2)} μL</span></div>
+            <div class="result-badge"><strong>模板总体积</strong><span>${totalTemp.toFixed(2)} μL</span></div>
+            <div class="result-badge"><strong>ddH₂O 体积</strong><span>${ddwater.toFixed(2)} μL</span></div>
+            <div class="result-badge"><strong>总体系</strong><span>${totalSys.toFixed(2)} μL</span></div>
+        `;
+    }
+
+    // ========= 全局事件绑定与初始化 =========
+    function bindAllEvents() {
+        // 细胞计数
+        document.getElementById('adj_total').addEventListener('input', updateConcentrationAdjust);
+        document.getElementById('adj_dilution').addEventListener('input', updateConcentrationAdjust);
+        document.getElementById('adj_vol').addEventListener('input', updateConcentrationAdjust);
+        document.getElementById('adj_target_conc').addEventListener('input', updateConcentrationAdjust);
+        document.getElementById('get_total').addEventListener('input', updateCellObtain);
+        document.getElementById('get_dilution').addEventListener('input', updateCellObtain);
+        document.getElementById('get_vol').addEventListener('input', updateCellObtain);
+        document.getElementById('need_cells').addEventListener('input', updateCellObtain);
+        // 多片段重组
+        document.getElementById('hr_vector_bp').addEventListener('input', updateMultiFragment);
+        document.getElementById('hr_vector_conc').addEventListener('input', updateMultiFragment);
+        document.getElementById('hr_vector_mass').addEventListener('input', updateMultiFragment);
+        document.getElementById('fragment_count').addEventListener('change', renderFragments);
+        // 铺板
+        const platingIds = ['plate_type','area_per_well','med_per_well','flask_area','flask_confluence','target_wells','seed_confluence','resuspend_vol'];
+        platingIds.forEach(id => {
+            let el = document.getElementById(id);
+            if (el) el.addEventListener('input', updatePlating);
+        });
+        document.getElementById('plate_type').addEventListener('change', updatePlating);
+        // 转染
+        document.getElementById('plasmid_count').addEventListener('change', () => renderPlasmidInputs(true));
+        document.getElementById('pei_ratio').addEventListener('input', updateTransfection);
+        // 溶液配制
+        const solutionInputs = ['stock_conc_val', 'stock_conc_unit', 'target_conc_val', 'target_conc_unit', 'target_vol_val', 'target_vol_unit'];
+        solutionInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateSolution);
+            if (el && el.tagName === 'SELECT') el.addEventListener('change', updateSolution);
+        });
+        // PCR
+        ['pcr_samples','pcr_sys','pcr_pol','pcr_fwd','pcr_rev','pcr_temp'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePCR);
+        });
+        // 初次计算
+        updateConcentrationAdjust();
+        updateCellObtain();
+        renderFragments();
+        updatePlating();
+        renderPlasmidInputs(false);
+        updateSolution();
+        updatePCR();
+    }
+    bindAllEvents();
+</script>
+</body>
+</html>
