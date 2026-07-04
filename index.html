@@ -67,28 +67,6 @@
             gap: 10px;
             flex-wrap: wrap;
         }
-        .sub-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #e0e9f0;
-            padding-bottom: 8px;
-            flex-wrap: wrap;
-        }
-        .sub-tab-btn {
-            background: none;
-            border: none;
-            padding: 8px 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #5a6e7c;
-            cursor: pointer;
-            border-radius: 30px;
-            transition: 0.2s;
-        }
-        .sub-tab-btn.active-sub { background: #e7f0fa; color: #0f62ac; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .sub-pane { display: none; }
-        .sub-pane.active-sub-pane { display: block; }
         .input-grid {
             display: flex;
             flex-wrap: wrap;
@@ -195,59 +173,80 @@
             padding-top: 20px;
         }
         .inline-sub-title { font-weight: 700; color: #1e4663; font-size: 1.1rem; margin-bottom: 12px; }
-        .titer-info {
-            background: #e6f0f9;
-            border-radius: 16px;
-            padding: 8px 16px;
-            margin: 6px 0;
+        .hidden-input { display: none; }
+        /* 稀释示意表格样式 */
+        .scheme-table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 0.85rem;
+            margin: 12px 0;
         }
+        .scheme-table th {
+            background: #dae5f0;
+            color: #1e4663;
+            padding: 8px 12px;
+            text-align: center;
+            border: 1px solid #c0d0df;
+        }
+        .scheme-table td {
+            padding: 6px 12px;
+            text-align: center;
+            border: 1px solid #c0d0df;
+            background: white;
+        }
+        .scheme-table tr:nth-child(even) td { background: #f5f9fe; }
+        .scheme-container {
+            background: #fafdff;
+            border-radius: 20px;
+            padding: 16px 20px;
+            border: 1px solid #e9f0f5;
+            margin-bottom: 20px;
+        }
+        .scheme-container .title {
+            font-weight: 600;
+            color: #1e4663;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .sci-sup { font-weight: 500; }
     </style>
 </head>
 <body>
 <div class="app-container">
     <div class="nav-tabs">
-        <button class="tab-btn active" data-module="cell">🔬 细胞计数</button>
-        <button class="tab-btn" data-module="recomb">🧬 多片段重组</button>
-        <button class="tab-btn" data-module="plating">🧫 铺板计算</button>
-        <button class="tab-btn" data-module="transfect">⚡ 转染体系</button>
-        <button class="tab-btn" data-module="solution">🧴 溶液配制</button>
-        <button class="tab-btn" data-module="pcr">🧬 PCR 预混液</button>
-        <button class="tab-btn" data-module="titer">📊 滴度计算</button>
-        <button class="tab-btn" data-module="guide">📖 使用说明</button>
+        <button class="tab-btn active" data-module="cell">细胞计数</button>
+        <button class="tab-btn" data-module="recomb">多片段重组</button>
+        <button class="tab-btn" data-module="plating">铺板计算</button>
+        <button class="tab-btn" data-module="transfect">转染体系</button>
+        <button class="tab-btn" data-module="solution">溶液配制</button>
+        <button class="tab-btn" data-module="pcr">PCR 预混液</button>
+        <button class="tab-btn" data-module="titer">滴度计算</button>
+        <button class="tab-btn" data-module="guide">使用说明</button>
     </div>
 
     <!-- 模块1: 细胞计数 -->
     <div id="module-cell" class="module-pane active-pane">
-        <div class="section-title">🔬 细胞计数</div>
-        <div class="sub-tabs">
-            <button class="sub-tab-btn active-sub" data-sub="adj">📌 浓度调整</button>
-            <button class="sub-tab-btn" data-sub="obtain">📥 细胞获取</button>
-        </div>
-        <div id="sub_adj" class="sub-pane active-sub-pane">
-            <div class="input-grid">
-                <div class="input-field"><label>四角总数 (个)</label><input type="number" id="adj_total" value="88" step="1"></div>
-                <div class="input-field"><label>稀释倍数</label><input type="number" id="adj_dilution" value="100" step="1"></div>
-                <div class="input-field"><label>当前体积 (mL)</label><input type="number" id="adj_vol" value="5" step="0.1"></div>
-                <div class="input-field"><label>目的浓度 (10⁶/mL)</label><input type="number" id="adj_target_conc" value="1" step="0.1"></div>
+        <div class="section-title">细胞计数</div>
+        <div class="input-grid">
+            <div class="input-field"><label>四角总数 (个)</label><input type="number" id="cell_total" value="88" step="1"></div>
+            <div class="input-field"><label>稀释倍数</label><input type="number" id="cell_dilution" value="100" step="1"></div>
+            <div class="input-field"><label>当前体积 (mL)</label><input type="number" id="cell_vol" value="5" step="0.1"></div>
+            <div class="input-field" id="cell_target_conc_field"><label>目的浓度 (10⁶/mL)</label><input type="number" id="cell_target_conc" value="1" step="0.1"></div>
+            <div class="input-field" id="cell_need_field"><label>所需细胞数 (10⁶个)</label><input type="number" id="cell_need" value="10" step="0.5"></div>
+            <div class="input-field"><label>计算模式</label>
+                <select id="cell_mode">
+                    <option value="adjust">浓度调整</option>
+                    <option value="obtain">细胞获取</option>
+                </select>
             </div>
-            <div class="result-panel" id="adjResult"></div>
         </div>
-        <div id="sub_obtain" class="sub-pane">
-            <div class="input-grid">
-                <div class="input-field"><label>四角总数 (个)</label><input type="number" id="get_total" value="88" step="1"></div>
-                <div class="input-field"><label>稀释倍数</label><input type="number" id="get_dilution" value="100" step="1"></div>
-                <div class="input-field"><label>当前体积 (mL)</label><input type="number" id="get_vol" value="5" step="0.1"></div>
-                <div class="input-field"><label>所需细胞数 (10⁶个)</label><input type="number" id="need_cells" value="10" step="0.5"></div>
-            </div>
-            <div class="result-panel" id="getResult"></div>
-        </div>
-        <div class="note">💡 细胞浓度(10⁶/mL) = (四角总数/4)×10000×稀释倍数 / 1,000,000</div>
+        <div class="result-panel" id="cellResult"></div>
+        <div class="note">💡 浓度(10⁶/mL) = (四角总数/4)×10000×稀释倍数/1e6 &nbsp; 根据模式显示对应结果</div>
     </div>
 
     <!-- 模块2: 多片段重组 -->
     <div id="module-recomb" class="module-pane">
-        <div class="section-title">🧬 多片段同源重组</div>
+        <div class="section-title">多片段同源重组</div>
         <div class="input-grid">
             <div class="input-field"><label>载体长度 (bp)</label><input type="number" id="hr_vector_bp" value="12000" step="100"></div>
             <div class="input-field"><label>载体浓度 (ng/μL)</label><input type="number" id="hr_vector_conc" value="1000" step="10"></div>
@@ -263,7 +262,7 @@
 
     <!-- 模块3: 铺板计算 -->
     <div id="module-plating" class="module-pane">
-        <div class="section-title">🧫 铺板计算</div>
+        <div class="section-title">铺板计算</div>
         <div class="input-grid">
             <div class="input-field"><label>培养容器</label><select id="plate_type">
                 <option value="6">6孔板 (9.6 cm², 2 mL)</option>
@@ -271,7 +270,7 @@
                 <option value="24">24孔板 (1.9 cm², 0.5 mL)</option>
                 <option value="48">48孔板 (0.7 cm², 0.2 mL)</option>
                 <option value="96">96孔板 (0.3 cm², 0.1 mL)</option>
-                <option value="10cm">10 cm 培养皿 (78.5 cm², 10 mL)</option>
+                <option value="10cm">10 cm 培养皿 (55 cm², 10 mL)</option>
             </select></div>
             <div class="input-field"><label>孔/皿面积 (cm²)</label><input type="number" id="area_per_well" value="9.6" step="0.1"></div>
             <div class="input-field"><label>培养基体积 (mL)</label><input type="number" id="med_per_well" value="2" step="0.1"></div>
@@ -287,7 +286,7 @@
 
     <!-- 模块4: 转染体系 -->
     <div id="module-transfect" class="module-pane">
-        <div class="section-title">⚡ 转染复合物计算</div>
+        <div class="section-title">转染复合物计算</div>
         <div class="input-grid">
             <div class="input-field"><label>质粒数量</label><select id="plasmid_count">
                 <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
@@ -306,19 +305,50 @@
 
     <!-- 模块5: 溶液配制 -->
     <div id="module-solution" class="module-pane">
-        <div class="section-title">🧴 溶液稀释计算</div>
+        <div class="section-title">溶液稀释计算</div>
         <div class="input-grid">
-            <div class="input-field"><label>母液浓度</label><div style="display:flex;gap:6px;"><input type="number" id="stock_conc_val" value="10" step="any" style="flex:2;"><select id="stock_conc_unit" style="flex:1;"><option value="mg_per_ml">mg/mL</option><option value="ug_per_ml">μg/mL</option></select></div></div>
-            <div class="input-field"><label>目的浓度</label><div style="display:flex;gap:6px;"><input type="number" id="target_conc_val" value="8" step="any" style="flex:2;"><select id="target_conc_unit" style="flex:1;"><option value="ug_per_ml">μg/mL</option><option value="mg_per_ml">mg/mL</option></select></div></div>
-            <div class="input-field"><label>目的体积</label><div style="display:flex;gap:6px;"><input type="number" id="target_vol_val" value="50" step="any" style="flex:2;"><select id="target_vol_unit" style="flex:1;"><option value="ml">mL</option><option value="ul">μL</option></select></div></div>
+            <div class="input-field">
+                <label>母液浓度</label>
+                <div style="display:flex;gap:6px;">
+                    <input type="number" id="stock_conc_val" value="10" step="any" style="flex:2;">
+                    <select id="stock_conc_unit" style="flex:1;">
+                        <option value="mg_per_ml">mg/mL</option>
+                        <option value="ug_per_ml">μg/mL</option>
+                        <option value="ug_per_ul">μg/μL</option>
+                        <option value="ng_per_ul">ng/μL</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>目的浓度</label>
+                <div style="display:flex;gap:6px;">
+                    <input type="number" id="target_conc_val" value="8" step="any" style="flex:2;">
+                    <select id="target_conc_unit" style="flex:1;">
+                        <option value="ug_per_ml">μg/mL</option>
+                        <option value="mg_per_ml">mg/mL</option>
+                        <option value="ug_per_ul">μg/μL</option>
+                        <option value="ng_per_ul">ng/μL</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-field">
+                <label>目的体积</label>
+                <div style="display:flex;gap:6px;">
+                    <input type="number" id="target_vol_val" value="50" step="any" style="flex:2;">
+                    <select id="target_vol_unit" style="flex:1;">
+                        <option value="ml">mL</option>
+                        <option value="ul">μL</option>
+                    </select>
+                </div>
+            </div>
         </div>
         <div class="result-panel" id="solutionResult" style="flex-direction:column;gap:12px;"></div>
-        <div class="note">📌 C₁V₁ = C₂V₂ (统一换算至μg/mL和μL)</div>
+        <div class="note">📌 浓度统一换算为 μg/mL 后计算：1 mg/mL = 1000 μg/mL，1 μg/μL = 1000 μg/mL，1 ng/μL = 1 μg/mL。</div>
     </div>
 
     <!-- 模块6: PCR 预混液 -->
     <div id="module-pcr" class="module-pane">
-        <div class="section-title">🧬 PCR 预混液</div>
+        <div class="section-title">PCR 预混液</div>
         <div class="input-grid">
             <div class="input-field"><label>样本数</label><input type="number" id="pcr_samples" value="5" step="1"></div>
             <div class="input-field"><label>单反应预混体积 (μL)</label><input type="number" id="pcr_sys" value="10" step="1"></div>
@@ -330,46 +360,53 @@
         <div class="note">🧪 ddH₂O = 预混总体积 − (聚合酶+引物)总体积，模板单独添加</div>
     </div>
 
-    <!-- 模块7: 滴度计算 (10倍梯度稀释，直接指定每排病毒原液量) -->
+    <!-- 模块7: 滴度计算 (含稀释示意) -->
     <div id="module-titer" class="module-pane">
-        <div class="section-title">📊 滴度计算 <span>10倍梯度稀释 · 输入荧光总数与重复数</span></div>
+        <div class="section-title">滴度计算 <span>病变/荧光/空斑数 · 科学计数法</span></div>
         <div class="input-grid">
             <div class="input-field"><label>第一排病毒原液 (μL)</label><input type="number" id="titer_first_vol" value="10" step="0.1"></div>
             <div class="input-field"><label>选择排数 (1-8)</label><select id="titer_row_select">
                 <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
                 <option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
             </select></div>
-            <div class="input-field"><label>该排荧光总数</label><input type="number" id="titer_fluo_total" value="21" step="1"></div>
+            <div class="input-field"><label>该排病变/荧光/空斑总数</label><input type="number" id="titer_fluo_total" value="21" step="1"></div>
             <div class="input-field"><label>重复组数 (孔数)</label><input type="number" id="titer_repeats" value="3" step="1" min="1"></div>
         </div>
+
+        <!-- 稀释示意表格 -->
+        <div class="scheme-container" id="dilution_scheme_container">
+            <div class="title">🧪 稀释示意</div>
+            <div id="dilution_scheme"></div>
+        </div>
+
         <div class="result-panel" id="titerResult" style="flex-direction: column; gap: 12px;"></div>
-        <div class="note">📊 每排病毒原液量 = 第一排量 / 10^(排数-1)。平均荧光 = 荧光总数 / 重复组数。滴度(TU/mL) = (平均荧光 × 1000) / 病毒原液量(μL)。</div>
+        <div class="note">📊 每排病毒原液量 = 第一排量 / 10^(排数-1)。平均计数 = 总数 / 重复组数。滴度(TU/mL) = (平均计数 × 1000) / 病毒原液量(μL)。结果以科学计数法展示。</div>
 
         <!-- MOI 子板块 -->
         <div class="inline-sub-section">
-            <div class="inline-sub-title">🧫 MOI 与病毒体积计算</div>
+            <div class="inline-sub-title">MOI 与病毒体积计算 (滴度单位: 10⁶ TU/mL)</div>
             <div class="input-grid">
                 <div class="input-field"><label>细胞数 (×10⁵ 个)</label><input type="number" id="moi_cell_count" value="10" step="0.5"></div>
                 <div class="input-field"><label>MOI</label><input type="number" id="moi_value" value="10" step="0.1"></div>
-                <div class="input-field"><label>病毒滴度 (TU/mL)</label><input type="number" id="moi_titer" value="1e8" step="any"></div>
+                <div class="input-field"><label>病毒滴度 (10⁶ TU/mL)</label><input type="number" id="moi_titer" value="100" step="1"></div>
             </div>
             <div class="result-panel" id="moiResult"></div>
-            <div class="note">💡 病毒体积(μL) = (细胞数 × 10⁵ × MOI) / 滴度(TU/mL) × 1000</div>
+            <div class="note">💡 病毒体积(μL) = (细胞数 × 10⁵ × MOI) / (滴度 × 10⁶) × 1000 &nbsp; 输入滴度单位为 10⁶ TU/mL，细胞数以 10⁵ 为单位。</div>
         </div>
     </div>
 
     <!-- 模块8: 使用说明 -->
     <div id="module-guide" class="module-pane">
         <div class="guide-section">
-            <div class="guide-title">📖 使用说明</div>
+            <div class="guide-title">使用说明</div>
             <div class="guide-grid">
-                <div class="guide-card"><h4>🔬 细胞计数</h4><p>浓度调整：计算稀释/浓缩体积。细胞获取：计算所需悬液体积(μL)。</p></div>
-                <div class="guide-card"><h4>🧬 多片段重组</h4><p>设定载体与片段参数，计算各片段质量与体积。</p></div>
-                <div class="guide-card"><h4>🧫 铺板计算</h4><p>计算细胞悬液体积和补液量。</p></div>
-                <div class="guide-card"><h4>⚡ 转染体系</h4><p>支持多组，每组独立输入质粒质量与浓度。</p></div>
-                <div class="guide-card"><h4>🧴 溶液配制</h4><p>母液稀释计算，支持单位自动换算。</p></div>
-                <div class="guide-card"><h4>🧬 PCR 预混液</h4><p>计算聚合酶、引物、ddH₂O体积，模板单独添加。</p></div>
-                <div class="guide-card"><h4>📊 滴度计算</h4><p>10倍梯度稀释，输入荧光总数和重复数计算滴度，附带MOI计算。</p></div>
+                <div class="guide-card"><h4>细胞计数</h4><p>浓度调整 + 细胞获取合并，通过模式切换选择。输入项根据模式动态显示。</p></div>
+                <div class="guide-card"><h4>多片段重组</h4><p>设定载体与片段参数，计算各片段质量与体积。</p></div>
+                <div class="guide-card"><h4>铺板计算</h4><p>计算细胞悬液体积和补液量。10cm皿面积55cm²。</p></div>
+                <div class="guide-card"><h4>转染体系</h4><p>支持多组，每组独立输入质粒质量与浓度。</p></div>
+                <div class="guide-card"><h4>溶液配制</h4><p>母液稀释计算，支持单位自动换算（mg/mL, μg/mL, μg/μL, ng/μL）。</p></div>
+                <div class="guide-card"><h4>PCR 预混液</h4><p>计算聚合酶、引物、ddH₂O体积，模板单独添加。</p></div>
+                <div class="guide-card"><h4>滴度计算</h4><p>10倍梯度稀释，输入病变/荧光/空斑总数及重复数，科学计数法展示滴度。MOI计算滴度单位10⁶ TU/mL。</p></div>
             </div>
         </div>
     </div>
@@ -388,57 +425,52 @@
             document.getElementById(`module-${module}`).classList.add('active-pane');
             if (module === 'transfect') renderTransfectionGroups();
             if (module === 'recomb') renderFragments();
-            if (module === 'cell') { updateConcentrationAdjust(); updateCellObtain(); }
-            if (module === 'titer') { updateTiter(); updateMOI(); }
+            if (module === 'cell') updateCellCalc();
+            if (module === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
         });
     });
 
-    // 子页面切换 (细胞计数)
-    const subTabs = document.querySelectorAll('.sub-tab-btn');
-    const subPanes = document.querySelectorAll('.sub-pane');
-    function switchSubPane(subId) {
-        subPanes.forEach(p => p.classList.remove('active-sub-pane'));
-        document.getElementById(`sub_${subId}`).classList.add('active-sub-pane');
-        subTabs.forEach(btn => btn.classList.toggle('active-sub', btn.getAttribute('data-sub') === subId));
+    // ========= 1. 细胞计数（合并，可选模式，动态输入） =========
+    function updateCellInputs() {
+        const mode = document.getElementById('cell_mode').value;
+        const targetField = document.getElementById('cell_target_conc_field');
+        const needField = document.getElementById('cell_need_field');
+        if (mode === 'adjust') {
+            targetField.classList.remove('hidden-input');
+            needField.classList.add('hidden-input');
+        } else { // obtain
+            targetField.classList.add('hidden-input');
+            needField.classList.remove('hidden-input');
+        }
     }
-    subTabs.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const sub = btn.getAttribute('data-sub');
-            switchSubPane(sub);
-            if (sub === 'adj') updateConcentrationAdjust();
-            if (sub === 'obtain') updateCellObtain();
-        });
-    });
+    function updateCellCalc() {
+        updateCellInputs();
+        let total = parseFloat(document.getElementById('cell_total').value) || 0;
+        let dilution = parseFloat(document.getElementById('cell_dilution').value) || 1;
+        let curVol = parseFloat(document.getElementById('cell_vol').value) || 0;
+        let targetConc = parseFloat(document.getElementById('cell_target_conc').value) || 0;
+        let needCells = parseFloat(document.getElementById('cell_need').value) || 0;
+        let mode = document.getElementById('cell_mode').value;
 
-    // ========= 1. 细胞计数 =========
-    function updateConcentrationAdjust() {
-        let total = parseFloat(document.getElementById('adj_total').value) || 0;
-        let dilution = parseFloat(document.getElementById('adj_dilution').value) || 1;
-        let curVol = parseFloat(document.getElementById('adj_vol').value) || 0;
-        let targetConc = parseFloat(document.getElementById('adj_target_conc').value) || 0;
         let currentConc = ((total / 4) * 10000 * dilution) / 1000000;
         let totalCells = curVol * currentConc;
         let finalVol = (targetConc > 0) ? (totalCells / targetConc) : 0;
         let extraVol = finalVol - curVol;
-        document.getElementById('adjResult').innerHTML = `
-            <div class="result-badge"><strong>当前浓度</strong><span>${currentConc.toFixed(3)} ×10⁶/mL</span></div>
-            <div class="result-badge"><strong>总细胞数</strong><span>${totalCells.toFixed(2)} ×10⁶</span></div>
-            <div class="result-badge"><strong>终体积</strong><span>${finalVol.toFixed(2)} mL</span></div>
-            <div class="result-badge"><strong>额外体积</strong><span>${extraVol.toFixed(2)} mL</span></div>
-        `;
-    }
-    function updateCellObtain() {
-        let total = parseFloat(document.getElementById('get_total').value) || 0;
-        let dilution = parseFloat(document.getElementById('get_dilution').value) || 1;
-        let curVol = parseFloat(document.getElementById('get_vol').value) || 0;
-        let needCells = parseFloat(document.getElementById('need_cells').value) || 0;
-        let currentConc = ((total / 4) * 10000 * dilution) / 1000000;
         let requiredVol = (currentConc > 0) ? (needCells / currentConc) : 0;
-        document.getElementById('getResult').innerHTML = `
-            <div class="result-badge"><strong>当前浓度</strong><span>${currentConc.toFixed(3)} ×10⁶/mL</span></div>
-            <div class="result-badge"><strong>所需体积</strong><span>${(requiredVol*1000).toFixed(0)} μL (${requiredVol.toFixed(3)} mL)</span></div>
-            ${currentConc === 0 ? '<div class="result-badge">⚠️ 浓度为零</div>' : ''}
-        `;
+
+        let html = '';
+        html += `<div class="result-badge"><strong>当前浓度</strong><span>${currentConc.toFixed(3)} ×10⁶/mL</span></div>`;
+        html += `<div class="result-badge"><strong>总细胞数</strong><span>${totalCells.toFixed(2)} ×10⁶</span></div>`;
+
+        if (mode === 'adjust') {
+            html += `<div class="result-badge"><strong>终体积</strong><span>${finalVol.toFixed(2)} mL</span></div>`;
+            html += `<div class="result-badge"><strong>额外体积</strong><span>${extraVol.toFixed(2)} mL</span></div>`;
+        } else {
+            html += `<div class="result-badge"><strong>获取所需体积</strong><span>${(requiredVol*1000).toFixed(0)} μL (${requiredVol.toFixed(3)} mL)</span></div>`;
+        }
+
+        if (currentConc === 0) html += `<div class="result-badge">⚠️ 浓度为零</div>`;
+        document.getElementById('cellResult').innerHTML = html;
     }
 
     // ========= 2. 多片段重组 =========
@@ -503,10 +535,10 @@
         document.getElementById('multiFragmentResult').innerHTML = resultsHTML;
     }
 
-    // ========= 3. 铺板计算 =========
+    // ========= 3. 铺板计算（10cm皿面积55cm²） =========
     function updatePlating() {
         let plateSelect = document.getElementById('plate_type').value;
-        const areaMap = {6:9.6,12:3.8,24:1.9,48:0.7,96:0.3,"10cm":78.5};
+        const areaMap = {6:9.6,12:3.8,24:1.9,48:0.7,96:0.3,"10cm":55};
         const volMap = {6:2,12:1,24:0.5,48:0.2,96:0.1,"10cm":10};
         document.getElementById('area_per_well').value = areaMap[plateSelect];
         document.getElementById('med_per_well').value = volMap[plateSelect];
@@ -546,7 +578,7 @@
         for (let g = 1; g <= gCount; g++) {
             const groupDiv = document.createElement('div');
             groupDiv.className = 'group-card';
-            let html = `<div class="group-header">🧪 组 ${g}</div><div style="display:flex; flex-wrap:wrap; gap:12px;">`;
+            let html = `<div class="group-header">组 ${g}</div><div style="display:flex; flex-wrap:wrap; gap:12px;">`;
             for (let p = 1; p <= pCount; p++) {
                 let defaultMass = (p===1?4:(p===2?1:(p===3?3:1)));
                 let defaultConc = (p===1?500:(p===2?300:(p===3?200:300)));
@@ -604,7 +636,17 @@
         document.getElementById('transfectionResult').innerHTML = html || '<div class="result-badge">请添加有效组</div>';
     }
 
-    // ========= 5. 溶液配制 =========
+    // ========= 5. 溶液配制 (支持 μg/μL, ng/μL) =========
+    function convertToUgPerMl(value, unit) {
+        switch(unit) {
+            case 'mg_per_ml': return value * 1000;
+            case 'ug_per_ml': return value;
+            case 'ug_per_ul': return value * 1000;
+            case 'ng_per_ul': return value; // 1 ng/μL = 1 μg/mL
+            default: return value;
+        }
+    }
+
     function updateSolution() {
         let stockVal = parseFloat(document.getElementById('stock_conc_val').value) || 0;
         let stockUnit = document.getElementById('stock_conc_unit').value;
@@ -612,16 +654,20 @@
         let targetConcUnit = document.getElementById('target_conc_unit').value;
         let targetVolVal = parseFloat(document.getElementById('target_vol_val').value) || 0;
         let targetVolUnit = document.getElementById('target_vol_unit').value;
-        let stockConcUg = (stockUnit === 'mg_per_ml') ? stockVal * 1000 : stockVal;
-        let targetConcUg = (targetConcUnit === 'mg_per_ml') ? targetConcVal * 1000 : targetConcVal;
+
+        let stockConcUg = convertToUgPerMl(stockVal, stockUnit);
+        let targetConcUg = convertToUgPerMl(targetConcVal, targetConcUnit);
         let targetVolUl = (targetVolUnit === 'ml') ? targetVolVal * 1000 : targetVolVal;
+
         let requiredStockUl = (stockConcUg > 0) ? (targetVolUl * targetConcUg) / stockConcUg : 0;
         let diluentVol = targetVolUl - requiredStockUl;
         let diluentDisplay = (targetVolUnit === 'ml') ? diluentVol/1000 : diluentVol;
         let unitDisplay = targetVolUnit === 'ml' ? 'mL' : 'μL';
+
         document.getElementById('solutionResult').innerHTML = `
             <div class="result-badge"><strong>母液</strong><span>${requiredStockUl.toFixed(2)} μL</span></div>
             <div class="result-badge"><strong>稀释液</strong><span>${diluentDisplay.toFixed(2)} ${unitDisplay}</span></div>
+            <div class="note" style="width:100%;">换算: 母液浓度 ${stockVal} ${stockUnit} → ${stockConcUg.toFixed(2)} μg/mL &nbsp; 目的浓度 ${targetConcVal} ${targetConcUnit} → ${targetConcUg.toFixed(2)} μg/mL</div>
         `;
     }
 
@@ -647,53 +693,104 @@
         `;
     }
 
-    // ========= 7. 滴度计算 (简化版) =========
+    // ========= 7. 滴度计算 (科学计数法上标) + 稀释示意 =========
+    function toSciSup(num, digits=4) {
+        if (num === 0) return '0';
+        if (!isFinite(num)) return '∞';
+        const exp = Math.floor(Math.log10(Math.abs(num)));
+        const mant = num / Math.pow(10, exp);
+        return mant.toFixed(digits-1) + ' × 10<sup>' + exp + '</sup>';
+    }
+
+    // 格式化体积为科学计数法（上标）
+    function formatVolume(vol) {
+        if (vol === 0) return '0';
+        if (!isFinite(vol)) return '∞';
+        // 尝试判断是否为10的负整数次幂
+        const log10 = Math.log10(vol);
+        if (Math.abs(log10 - Math.round(log10)) < 1e-10) {
+            const exp = Math.round(log10);
+            if (exp < 0) {
+                return '10<sup>' + exp + '</sup>';
+            } else {
+                return '10<sup>' + exp + '</sup>';
+            }
+        } else {
+            // 使用科学计数法
+            const exp = Math.floor(log10);
+            const mant = vol / Math.pow(10, exp);
+            return mant.toFixed(3) + '×10<sup>' + exp + '</sup>';
+        }
+    }
+
+    // 更新稀释示意表格
+    function updateDilutionScheme() {
+        const firstVol = parseFloat(document.getElementById('titer_first_vol').value) || 0;
+        const rowCount = parseInt(document.getElementById('titer_row_select').value) || 1;
+        const container = document.getElementById('dilution_scheme');
+        if (rowCount < 1 || firstVol <= 0) {
+            container.innerHTML = '<p style="color:#5f7f9a; font-size:0.85rem;">请输入有效的第一排体积和排数</p>';
+            return;
+        }
+        let html = `<table class="scheme-table">
+            <thead><tr><th>排数</th><th>稀释倍数</th><th>病毒原液体积 (μL)</th></tr></thead><tbody>`;
+        for (let i = 1; i <= rowCount; i++) {
+            const dilution = Math.pow(10, i - 1);
+            const vol = firstVol / dilution;
+            const volStr = formatVolume(vol);
+            html += `<tr><td>${i}</td><td>10<sup>${i-1}</sup></td><td>${volStr}</td></tr>`;
+        }
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    }
+
     function updateTiter() {
         const firstVol = parseFloat(document.getElementById('titer_first_vol').value) || 0;
         const row = parseInt(document.getElementById('titer_row_select').value) || 1;
         const fluoTotal = parseFloat(document.getElementById('titer_fluo_total').value) || 0;
         const repeats = parseFloat(document.getElementById('titer_repeats').value) || 1;
 
-        // 该排病毒原液量 = firstVol / 10^(row-1)
         const virusVol = firstVol / Math.pow(10, row - 1);
-        const avgFluo = fluoTotal / repeats;
+        const avgCount = fluoTotal / repeats;
         let titer = 0;
         if (virusVol > 0) {
-            titer = (avgFluo * 1000) / virusVol;
+            titer = (avgCount * 1000) / virusVol;
         }
 
         document.getElementById('titerResult').innerHTML = `
             <div class="result-badge"><strong>第 ${row} 排病毒原液</strong><span>${virusVol.toFixed(4)} μL</span></div>
-            <div class="result-badge"><strong>平均荧光</strong><span>${avgFluo.toFixed(2)} (总数 ${fluoTotal} / ${repeats} 重复)</span></div>
-            <div class="result-badge" style="background:#e6f0f9;"><strong>滴度</strong><span style="font-size:1.1rem;">${titer.toFixed(2)} TU/mL</span></div>
-            <div class="note" style="width:100%;">公式: 滴度 = (平均荧光 × 1000) / 病毒原液量(μL)</div>
+            <div class="result-badge"><strong>平均病变/荧光/空斑数</strong><span>${avgCount.toFixed(2)} (总数 ${fluoTotal} / ${repeats} 重复)</span></div>
+            <div class="result-badge" style="background:#e6f0f9;"><strong>滴度</strong><span style="font-size:1.1rem; font-weight:700;">${toSciSup(titer)} TU/mL</span></div>
+            <div class="note" style="width:100%;">公式: 滴度 = (平均计数 × 1000) / 病毒原液量(μL) &nbsp; 科学计数法: ${titer.toFixed(4)} = ${toSciSup(titer)}</div>
         `;
     }
 
-    // ========= 8. MOI 计算 =========
+    // ========= 8. MOI 计算 (滴度单位 10^6 TU/mL) =========
     function updateMOI() {
         let cellCount = parseFloat(document.getElementById('moi_cell_count').value) || 1;
         let moi = parseFloat(document.getElementById('moi_value').value) || 1;
-        let titer = parseFloat(document.getElementById('moi_titer').value) || 1;
+        let titer6 = parseFloat(document.getElementById('moi_titer').value) || 1;
         let actualCells = cellCount * 1e5;
+        let titer = titer6 * 1e6;
         let virusVol = (actualCells * moi) / titer * 1000;
         document.getElementById('moiResult').innerHTML = `
             <div class="result-badge"><strong>所需病毒体积</strong><span>${virusVol.toFixed(2)} μL</span></div>
-            <div class="result-badge"><strong>实际细胞数</strong><span>${actualCells.toFixed(0)} 个 (${cellCount} × 10⁵)</span></div>
+            <div class="result-badge"><strong>实际细胞数</strong><span>${toSciSup(actualCells)}</span></div>
             <div class="result-badge"><strong>MOI</strong><span>${moi}</span></div>
-            <div class="result-badge"><strong>滴度</strong><span>${titer.toFixed(2)} TU/mL</span></div>
-            <div class="note" style="width:100%;">公式: 病毒体积(μL) = (细胞数 × MOI) / 滴度 × 1000</div>
+            <div class="result-badge"><strong>滴度</strong><span>${toSciSup(titer)} TU/mL</span></div>
+            <div class="note" style="width:100%;">公式: 病毒体积(μL) = (细胞数 × MOI) / 滴度 × 1000 &nbsp; 输入滴度单位: 10⁶ TU/mL</div>
         `;
     }
 
     // ========= 事件绑定 =========
     function bindAll() {
         // 细胞计数
-        ['adj_total','adj_dilution','adj_vol','adj_target_conc'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updateConcentrationAdjust);
-        });
-        ['get_total','get_dilution','get_vol','need_cells'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updateCellObtain);
+        ['cell_total','cell_dilution','cell_vol','cell_target_conc','cell_need','cell_mode'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateCellCalc);
+                if (el.tagName === 'SELECT') el.addEventListener('change', updateCellCalc);
+            }
         });
         // 重组
         document.getElementById('hr_vector_bp').addEventListener('input', updateMultiFragment);
@@ -713,8 +810,10 @@
         // 溶液
         ['stock_conc_val','stock_conc_unit','target_conc_val','target_conc_unit','target_vol_val','target_vol_unit'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('input', updateSolution);
-            if (el && el.tagName === 'SELECT') el.addEventListener('change', updateSolution);
+            if (el) {
+                el.addEventListener('input', updateSolution);
+                if (el.tagName === 'SELECT') el.addEventListener('change', updateSolution);
+            }
         });
         // PCR
         ['pcr_samples','pcr_sys','pcr_pol','pcr_fwd','pcr_rev'].forEach(id => {
@@ -723,21 +822,23 @@
         // 滴度
         ['titer_first_vol','titer_row_select','titer_fluo_total','titer_repeats'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('input', updateTiter);
-            if (el && el.tagName === 'SELECT') el.addEventListener('change', updateTiter);
+            if (el) {
+                el.addEventListener('input', () => { updateDilutionScheme(); updateTiter(); });
+                if (el.tagName === 'SELECT') el.addEventListener('change', () => { updateDilutionScheme(); updateTiter(); });
+            }
         });
         // MOI
         ['moi_cell_count','moi_value','moi_titer'].forEach(id => {
             document.getElementById(id).addEventListener('input', updateMOI);
         });
         // 初始化
-        updateConcentrationAdjust();
-        updateCellObtain();
+        updateCellCalc();
         renderFragments();
         updatePlating();
         renderTransfectionGroups();
         updateSolution();
         updatePCR();
+        updateDilutionScheme();
         updateTiter();
         updateMOI();
     }
