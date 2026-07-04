@@ -174,7 +174,6 @@
         }
         .inline-sub-title { font-weight: 700; color: #1e4663; font-size: 1.1rem; margin-bottom: 12px; }
         .hidden-input { display: none; }
-        /* 稀释示意表格样式 */
         .scheme-table {
             width: 100%;
             border-collapse: collapse;
@@ -208,7 +207,26 @@
             margin-bottom: 10px;
             font-size: 1rem;
         }
-        .sci-sup { font-weight: 500; }
+        .transfection-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin: 8px 0;
+        }
+        .transfection-table th {
+            background: #dae5f0;
+            color: #1e4663;
+            padding: 6px 10px;
+            text-align: center;
+            border: 1px solid #c0d0df;
+        }
+        .transfection-table td {
+            padding: 6px 10px;
+            text-align: center;
+            border: 1px solid #c0d0df;
+            background: white;
+        }
+        .transfection-table tr:nth-child(even) td { background: #f5f9fe; }
     </style>
 </head>
 <body>
@@ -284,7 +302,7 @@
         <div class="note">🔁 悬液(μL) = (孔数×孔面积×接种汇合%) / (瓶面积×瓶汇合%) × 重悬体积 × 1000</div>
     </div>
 
-    <!-- 模块4: 转染体系 -->
+    <!-- 模块4: 转染体系（初始组数=2） -->
     <div id="module-transfect" class="module-pane">
         <div class="section-title">转染复合物计算</div>
         <div class="input-grid">
@@ -293,9 +311,18 @@
             </select></div>
             <div class="input-field"><label>PEI/DNA 比值</label><input type="number" id="pei_ratio" value="2.5" step="0.1"></div>
             <div class="input-field"><label>组数</label><select id="group_count">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-                <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option>
-                <option value="10">10</option><option value="11">11</option><option value="12" selected>12</option>
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
             </select></div>
         </div>
         <div id="transfection_groups"></div>
@@ -360,7 +387,7 @@
         <div class="note">🧪 ddH₂O = 预混总体积 − (聚合酶+引物)总体积，模板单独添加</div>
     </div>
 
-    <!-- 模块7: 滴度计算 (含稀释示意) -->
+    <!-- 模块7: 滴度计算 -->
     <div id="module-titer" class="module-pane">
         <div class="section-title">滴度计算 <span>病变/荧光/空斑数 · 科学计数法</span></div>
         <div class="input-grid">
@@ -372,17 +399,12 @@
             <div class="input-field"><label>该排病变/荧光/空斑总数</label><input type="number" id="titer_fluo_total" value="21" step="1"></div>
             <div class="input-field"><label>重复组数 (孔数)</label><input type="number" id="titer_repeats" value="3" step="1" min="1"></div>
         </div>
-
-        <!-- 稀释示意表格 -->
         <div class="scheme-container" id="dilution_scheme_container">
             <div class="title">🧪 稀释示意</div>
             <div id="dilution_scheme"></div>
         </div>
-
         <div class="result-panel" id="titerResult" style="flex-direction: column; gap: 12px;"></div>
         <div class="note">📊 每排病毒原液量 = 第一排量 / 10^(排数-1)。平均计数 = 总数 / 重复组数。滴度(TU/mL) = (平均计数 × 1000) / 病毒原液量(μL)。结果以科学计数法展示。</div>
-
-        <!-- MOI 子板块 -->
         <div class="inline-sub-section">
             <div class="inline-sub-title">MOI 与病毒体积计算 (滴度单位: 10⁶ TU/mL)</div>
             <div class="input-grid">
@@ -403,7 +425,7 @@
                 <div class="guide-card"><h4>细胞计数</h4><p>浓度调整 + 细胞获取合并，通过模式切换选择。输入项根据模式动态显示。</p></div>
                 <div class="guide-card"><h4>多片段重组</h4><p>设定载体与片段参数，计算各片段质量与体积。</p></div>
                 <div class="guide-card"><h4>铺板计算</h4><p>计算细胞悬液体积和补液量。10cm皿面积55cm²。</p></div>
-                <div class="guide-card"><h4>转染体系</h4><p>支持多组，每组独立输入质粒质量与浓度。</p></div>
+                <div class="guide-card"><h4>转染体系</h4><p>支持多组，每组独立输入质粒质量与浓度。结果以表格展示，清晰直观。初始组数设为2。</p></div>
                 <div class="guide-card"><h4>溶液配制</h4><p>母液稀释计算，支持单位自动换算（mg/mL, μg/mL, μg/μL, ng/μL）。</p></div>
                 <div class="guide-card"><h4>PCR 预混液</h4><p>计算聚合酶、引物、ddH₂O体积，模板单独添加。</p></div>
                 <div class="guide-card"><h4>滴度计算</h4><p>10倍梯度稀释，输入病变/荧光/空斑总数及重复数，科学计数法展示滴度。MOI计算滴度单位10⁶ TU/mL。</p></div>
@@ -430,7 +452,7 @@
         });
     });
 
-    // ========= 1. 细胞计数（合并，可选模式，动态输入） =========
+    // ========= 1. 细胞计数 =========
     function updateCellInputs() {
         const mode = document.getElementById('cell_mode').value;
         const targetField = document.getElementById('cell_target_conc_field');
@@ -438,7 +460,7 @@
         if (mode === 'adjust') {
             targetField.classList.remove('hidden-input');
             needField.classList.add('hidden-input');
-        } else { // obtain
+        } else {
             targetField.classList.add('hidden-input');
             needField.classList.remove('hidden-input');
         }
@@ -468,7 +490,6 @@
         } else {
             html += `<div class="result-badge"><strong>获取所需体积</strong><span>${(requiredVol*1000).toFixed(0)} μL (${requiredVol.toFixed(3)} mL)</span></div>`;
         }
-
         if (currentConc === 0) html += `<div class="result-badge">⚠️ 浓度为零</div>`;
         document.getElementById('cellResult').innerHTML = html;
     }
@@ -535,7 +556,7 @@
         document.getElementById('multiFragmentResult').innerHTML = resultsHTML;
     }
 
-    // ========= 3. 铺板计算（10cm皿面积55cm²） =========
+    // ========= 3. 铺板计算 =========
     function updatePlating() {
         let plateSelect = document.getElementById('plate_type').value;
         const areaMap = {6:9.6,12:3.8,24:1.9,48:0.7,96:0.3,"10cm":55};
@@ -567,10 +588,10 @@
 
     // ========= 4. 转染体系 =========
     let currentPlasmidCount = 3;
-    let currentGroupCount = 12;
+    let currentGroupCount = 2;
     function renderTransfectionGroups() {
         let pCount = parseInt(document.getElementById('plasmid_count').value) || 3;
-        let gCount = parseInt(document.getElementById('group_count').value) || 12;
+        let gCount = parseInt(document.getElementById('group_count').value) || 2;
         currentPlasmidCount = pCount;
         currentGroupCount = gCount;
         const container = document.getElementById('transfection_groups');
@@ -611,42 +632,53 @@
         let pCount = currentPlasmidCount;
         let gCount = currentGroupCount;
         let peiRatio = parseFloat(document.getElementById('pei_ratio').value) || 2.5;
-        let html = '';
+        let html = `<table class="transfection-table">
+            <thead><tr><th>组</th>`;
+        for (let p = 1; p <= pCount; p++) {
+            html += `<th>P${p} (μL)</th>`;
+        }
+        html += `<th>总DNA (μg)</th><th>PEI (μL)</th></tr></thead><tbody>`;
+        let hasData = false;
         for (let g = 1; g <= gCount; g++) {
             let totalMass = 0;
             let vols = [];
+            let valid = true;
             for (let p = 1; p <= pCount; p++) {
                 const massEl = document.getElementById(`g${g}_p${p}_mass`);
                 const concEl = document.getElementById(`g${g}_p${p}_conc`);
-                if (!massEl || !concEl) continue;
+                if (!massEl || !concEl) { valid = false; continue; }
                 let mass = parseFloat(massEl.value) || 0;
                 let conc = parseFloat(concEl.value) || 1;
                 totalMass += mass;
                 let vol = (mass * 1000) / conc;
-                vols.push({idx:p, vol:vol, mass:mass});
+                vols.push(vol);
             }
+            if (!valid || vols.length === 0) continue;
             let peiVol = totalMass * peiRatio;
-            html += `<div style="background:#f5f9fe; padding:10px 16px; border-radius:20px; margin-bottom:8px;">
-                <strong>组 ${g}</strong> &nbsp; 总DNA: ${totalMass.toFixed(2)} μg &nbsp; PEI: ${peiVol.toFixed(2)} μL`;
+            html += `<tr><td><strong>${g}</strong></td>`;
             vols.forEach(v => {
-                html += ` &nbsp; P${v.idx}: ${v.vol.toFixed(2)} μL (${v.mass} μg)`;
+                html += `<td>${v.toFixed(2)}</td>`;
             });
-            html += `</div>`;
+            html += `<td>${totalMass.toFixed(2)}</td><td>${peiVol.toFixed(2)}</td></tr>`;
+            hasData = true;
         }
-        document.getElementById('transfectionResult').innerHTML = html || '<div class="result-badge">请添加有效组</div>';
+        html += `</tbody></table>`;
+        if (!hasData) {
+            html = '<div class="result-badge">请添加有效的组数据</div>';
+        }
+        document.getElementById('transfectionResult').innerHTML = html;
     }
 
-    // ========= 5. 溶液配制 (支持 μg/μL, ng/μL) =========
+    // ========= 5. 溶液配制 =========
     function convertToUgPerMl(value, unit) {
         switch(unit) {
             case 'mg_per_ml': return value * 1000;
             case 'ug_per_ml': return value;
             case 'ug_per_ul': return value * 1000;
-            case 'ng_per_ul': return value; // 1 ng/μL = 1 μg/mL
+            case 'ng_per_ul': return value;
             default: return value;
         }
     }
-
     function updateSolution() {
         let stockVal = parseFloat(document.getElementById('stock_conc_val').value) || 0;
         let stockUnit = document.getElementById('stock_conc_unit').value;
@@ -654,16 +686,13 @@
         let targetConcUnit = document.getElementById('target_conc_unit').value;
         let targetVolVal = parseFloat(document.getElementById('target_vol_val').value) || 0;
         let targetVolUnit = document.getElementById('target_vol_unit').value;
-
         let stockConcUg = convertToUgPerMl(stockVal, stockUnit);
         let targetConcUg = convertToUgPerMl(targetConcVal, targetConcUnit);
         let targetVolUl = (targetVolUnit === 'ml') ? targetVolVal * 1000 : targetVolVal;
-
         let requiredStockUl = (stockConcUg > 0) ? (targetVolUl * targetConcUg) / stockConcUg : 0;
         let diluentVol = targetVolUl - requiredStockUl;
         let diluentDisplay = (targetVolUnit === 'ml') ? diluentVol/1000 : diluentVol;
         let unitDisplay = targetVolUnit === 'ml' ? 'mL' : 'μL';
-
         document.getElementById('solutionResult').innerHTML = `
             <div class="result-badge"><strong>母液</strong><span>${requiredStockUl.toFixed(2)} μL</span></div>
             <div class="result-badge"><strong>稀释液</strong><span>${diluentDisplay.toFixed(2)} ${unitDisplay}</span></div>
@@ -693,7 +722,7 @@
         `;
     }
 
-    // ========= 7. 滴度计算 (科学计数法上标) + 稀释示意 =========
+    // ========= 7. 滴度计算 =========
     function toSciSup(num, digits=4) {
         if (num === 0) return '0';
         if (!isFinite(num)) return '∞';
@@ -701,29 +730,19 @@
         const mant = num / Math.pow(10, exp);
         return mant.toFixed(digits-1) + ' × 10<sup>' + exp + '</sup>';
     }
-
-    // 格式化体积为科学计数法（上标）
     function formatVolume(vol) {
         if (vol === 0) return '0';
         if (!isFinite(vol)) return '∞';
-        // 尝试判断是否为10的负整数次幂
         const log10 = Math.log10(vol);
         if (Math.abs(log10 - Math.round(log10)) < 1e-10) {
             const exp = Math.round(log10);
-            if (exp < 0) {
-                return '10<sup>' + exp + '</sup>';
-            } else {
-                return '10<sup>' + exp + '</sup>';
-            }
+            return '10<sup>' + exp + '</sup>';
         } else {
-            // 使用科学计数法
             const exp = Math.floor(log10);
             const mant = vol / Math.pow(10, exp);
             return mant.toFixed(3) + '×10<sup>' + exp + '</sup>';
         }
     }
-
-    // 更新稀释示意表格
     function updateDilutionScheme() {
         const firstVol = parseFloat(document.getElementById('titer_first_vol').value) || 0;
         const rowCount = parseInt(document.getElementById('titer_row_select').value) || 1;
@@ -743,20 +762,17 @@
         html += `</tbody></table>`;
         container.innerHTML = html;
     }
-
     function updateTiter() {
         const firstVol = parseFloat(document.getElementById('titer_first_vol').value) || 0;
         const row = parseInt(document.getElementById('titer_row_select').value) || 1;
         const fluoTotal = parseFloat(document.getElementById('titer_fluo_total').value) || 0;
         const repeats = parseFloat(document.getElementById('titer_repeats').value) || 1;
-
         const virusVol = firstVol / Math.pow(10, row - 1);
         const avgCount = fluoTotal / repeats;
         let titer = 0;
         if (virusVol > 0) {
             titer = (avgCount * 1000) / virusVol;
         }
-
         document.getElementById('titerResult').innerHTML = `
             <div class="result-badge"><strong>第 ${row} 排病毒原液</strong><span>${virusVol.toFixed(4)} μL</span></div>
             <div class="result-badge"><strong>平均病变/荧光/空斑数</strong><span>${avgCount.toFixed(2)} (总数 ${fluoTotal} / ${repeats} 重复)</span></div>
@@ -765,7 +781,7 @@
         `;
     }
 
-    // ========= 8. MOI 计算 (滴度单位 10^6 TU/mL) =========
+    // ========= 8. MOI 计算 =========
     function updateMOI() {
         let cellCount = parseFloat(document.getElementById('moi_cell_count').value) || 1;
         let moi = parseFloat(document.getElementById('moi_value').value) || 1;
