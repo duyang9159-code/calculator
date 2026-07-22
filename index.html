@@ -2,255 +2,361 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>实验计算工具箱 | 模块化实验室助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LabSuite | 模块化生物实验室计算工具箱</title>
     <style>
+        :root {
+            --primary: #40916c;
+            --primary-dark: #2d6a4f;
+            --primary-light: #e6f0e9;
+            --accent: #52b788;
+            --accent-light: #d8f3dc;
+            --warning: #ca8a04;
+            --bg-main: #f5f4f0;
+            --bg-card: #ffffff;
+            --text-main: #1b4332;
+            --text-muted: #6b7d76;
+            --border-color: #dde3df;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 2px 4px rgba(0,0,0,0.06);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
+
         body {
-            background: #eef2f8;
-            padding: 20px;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 12px;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
         }
+
         .app-container {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 32px;
-            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 1200px;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
         }
+
+        /* 导航 Tab */
         .nav-tabs {
             display: flex;
-            flex-wrap: wrap;
-            background: #f9fbfd;
-            border-bottom: 1px solid #e2edf2;
-            padding: 0 16px;
-            gap: 6px;
+            background: #f8f9f7;
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 12px 0 12px;
+            gap: 4px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
         }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+
         .tab-btn {
             background: transparent;
             border: none;
-            padding: 16px 20px;
-            font-size: 0.95rem;
+            padding: 10px 16px;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #4a627a;
+            color: var(--text-muted);
             cursor: pointer;
-            transition: all 0.2s;
-            border-radius: 32px 32px 0 0;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.15s ease;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
         }
-        .tab-btn:hover { background: #e6f0fa; color: #1e5a88; }
-        .tab-btn.active { color: #0f62ac; background: white; border-bottom: 3px solid #0f62ac; }
-        .module-pane {
-            display: none;
-            padding: 28px 32px;
-            animation: fadeIn 0.2s ease;
+        .tab-btn:hover { color: var(--primary-dark); }
+        .tab-btn.active {
+            color: var(--primary-dark);
+            background: var(--bg-card);
+            border-bottom: 2px solid var(--primary);
         }
-        .module-pane.active-pane { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .section-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #1e4663;
-            margin-bottom: 1.2rem;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #cbdde9;
+
+        .history-toggle-btn {
+            margin-left: auto;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
             display: flex;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            align-self: center;
+            margin-bottom: 8px;
         }
-        .input-grid {
+        .history-toggle-btn:hover { color: var(--primary-dark); border-color: var(--primary); }
+
+        /* 模块面板 */
+        .module-pane {
+            display: none;
+            padding: 24px 28px;
+            animation: fadeIn 0.15s ease-out;
+        }
+        .module-pane.active-pane { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 20px;
             display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 28px;
-            background: #fafdff;
-            padding: 18px 20px;
-            border-radius: 28px;
-            border: 1px solid #e9f0f5;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
         }
+
+        /* 表单与输入框 */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 16px;
+            background: #f9faf9;
+            padding: 18px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
         .input-field {
-            flex: 1 1 160px;
-            min-width: 140px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
         .input-field label {
-            display: block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            color: #2c6280;
-            margin-bottom: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #334155;
         }
         .input-field input, .input-field select {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #bfd6e4;
-            border-radius: 18px;
-            font-size: 0.9rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.95rem;
             background: white;
-            transition: 0.2s;
+            color: #0f172a;
+            transition: all 0.15s ease;
+            outline: none;
         }
         .input-field input:focus, .input-field select:focus {
-            border-color: #3b82f6;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
         }
+
+        /* 结果展示面板 */
         .result-panel {
-            background: #f1f6fc;
-            border-radius: 24px;
-            padding: 18px 24px;
-            margin-top: 12px;
+            background: #f8faf8;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-top: 14px;
             display: flex;
             flex-wrap: wrap;
-            gap: 18px;
-            align-items: baseline;
-            overflow: hidden; /* 防止内部溢出影响布局 */
+            gap: 12px;
         }
+
         .result-badge {
             background: white;
-            border-radius: 40px;
-            padding: 6px 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            word-break: break-word;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 16px;
+            flex: 1 1 170px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
-        .result-badge strong { color: #1c608b; }
-        .result-badge span { font-weight: 800; color: #0d3550; margin-left: 8px; }
-        .note {
-            font-size: 0.7rem;
-            color: #5f7f9a;
-            margin-top: 14px;
-            padding-left: 10px;
-            border-left: 3px solid #b9d4f0;
+        .result-badge label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
         }
-        .fragment-card {
-            background: #fef9e8;
-            border-radius: 20px;
-            padding: 12px 16px;
-            margin: 8px 0;
-            border-left: 4px solid #f0b37b;
-        }
-        .fragments-container { margin: 15px 0; max-height: 500px; overflow-y: auto; }
-        @media (max-width: 700px) {
-            .module-pane { padding: 20px 16px; }
-            .tab-btn { padding: 12px 14px; font-size: 0.8rem; }
-            .result-panel { padding: 12px 16px; gap: 12px; }
-            .result-badge { font-size: 0.8rem; padding: 4px 14px; }
-        }
-        .group-card {
-            background: #f5f9fe;
-            border-radius: 20px;
-            padding: 16px;
-            margin: 10px 0;
-            border: 1px solid #dae5f0;
-        }
-        .group-header { font-weight: 700; color: #1e4663; margin-bottom: 10px; font-size: 0.95rem; }
-        .guide-section { padding: 20px 24px; }
-        .guide-title {
-            font-size: 1.3rem;
+        .result-badge .val {
+            font-size: 1.2rem;
             font-weight: 700;
-            color: #1e4663;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #cbdde9;
-            padding-bottom: 10px;
+            color: var(--primary-dark);
         }
-        .guide-grid { display: flex; flex-wrap: wrap; gap: 24px; }
-        .guide-card {
-            background: #f8fafc;
-            border-radius: 20px;
-            padding: 18px 22px;
-            flex: 1 1 300px;
-            border-left: 4px solid #0f62ac;
+
+        .formula-line {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .guide-card h4 { font-size: 1rem; margin-bottom: 10px; color: #0f62ac; }
-        .guide-card p { font-size: 0.85rem; color: #2c5a7a; line-height: 1.5; margin-bottom: 6px; }
-        .guide-card ul { margin-left: 20px; font-size: 0.8rem; color: #3a6e8c; }
-        .inline-sub-section {
-            margin-top: 24px;
-            border-top: 2px dashed #cbdde9;
-            padding-top: 20px;
+        .note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .inline-sub-title { font-weight: 700; color: #1e4663; font-size: 1.1rem; margin-bottom: 12px; }
-        .hidden-input { display: none; }
-        .scheme-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
+
+        /* 表格样式 */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
             margin: 12px 0;
         }
-        .scheme-table th {
-            background: #dae5f0;
-            color: #1e4663;
-            padding: 8px 12px;
-            text-align: center;
-            border: 1px solid #c0d0df;
-        }
-        .scheme-table td {
-            padding: 6px 12px;
-            text-align: center;
-            border: 1px solid #c0d0df;
-            background: white;
-        }
-        .scheme-table tr:nth-child(even) td { background: #f5f9fe; }
-        .scheme-container {
-            background: #fafdff;
-            border-radius: 20px;
-            padding: 16px 20px;
-            border: 1px solid #e9f0f5;
-            margin-bottom: 20px;
-        }
-        .scheme-container .title {
-            font-weight: 600;
-            color: #1e4663;
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-        /* 转染结果表格 - 移动端优化 */
-        .transfection-table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin: 8px 0;
+        table.lab-table {
             width: 100%;
-        }
-        .transfection-table {
             border-collapse: collapse;
-            font-size: 0.85rem;
-            min-width: 320px;
-            width: 100%;
+            font-size: 0.88rem;
+            text-align: left;
         }
-        .transfection-table th {
-            background: #dae5f0;
-            color: #1e4663;
-            padding: 6px 8px;
-            text-align: center;
-            border: 1px solid #c0d0df;
-            white-space: nowrap;
+        table.lab-table th {
+            background: #f8fafc;
+            color: #334155;
+            padding: 10px 14px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
         }
-        .transfection-table td {
-            padding: 6px 8px;
-            text-align: center;
-            border: 1px solid #c0d0df;
+        table.lab-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
             background: white;
-            white-space: nowrap;
         }
-        .transfection-table tr:nth-child(even) td { background: #f5f9fe; }
-        @media (max-width: 500px) {
-            .transfection-table { font-size: 0.75rem; }
-            .transfection-table th, .transfection-table td { padding: 4px 6px; }
+        table.lab-table tr:last-child td { border-bottom: none; }
+        table.lab-table tr:nth-child(even) td { background: #fdfdfd; }
+
+        /* 卡片式输入（多片段 / 转染） */
+        .card-item {
+            background: #fafafa;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .card-item-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+
+        /* 模态弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .modal-container {
+            background: white;
+            width: 100%;
+            max-width: 720px;
+            max-height: 80vh;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border-color);
+            background: #f8fafc;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .hist-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            font-size: 0.83rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .hist-card:hover {
+            background: #e0f2fe;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .hist-header {
+            display: flex; justify-content: space-between; font-weight: 700; color: var(--primary); margin-bottom: 6px;
+        }
+
+        /* 使用说明排版卡片 */
+        .guide-card {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 16px;
+            background: #ffffff;
+        }
+        .guide-card-header {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+        .guide-card ul {
+            margin-left: 20px;
+            font-size: 0.88rem;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .hidden-input { display: none !important; }
+
+        @media (max-width: 640px) {
+            body { padding: 0; }
+            .app-container { border-radius: 0; border: none; }
+            .module-pane { padding: 16px; }
+            .input-grid { grid-template-columns: 1fr; gap: 12px; }
+            .result-badge { flex: 1 1 100%; }
+            .history-toggle-btn { width: 100%; justify-content: center; margin-top: 8px; }
         }
     </style>
 </head>
 <body>
+
 <div class="app-container">
+    <!-- 顶部导航栏 -->
     <div class="nav-tabs">
         <button class="tab-btn active" data-module="cell">细胞计数</button>
         <button class="tab-btn" data-module="recomb">多片段重组</button>
@@ -258,106 +364,110 @@
         <button class="tab-btn" data-module="transfect">转染体系</button>
         <button class="tab-btn" data-module="solution">溶液配制</button>
         <button class="tab-btn" data-module="pcr">PCR 预混液</button>
-        <button class="tab-btn" data-module="titer">滴度计算</button>
+        <button class="tab-btn" data-module="titer">滴度与 MOI</button>
         <button class="tab-btn" data-module="guide">使用说明</button>
+        <button class="history-toggle-btn" id="btn-open-history">最近记录</button>
     </div>
 
-    <!-- 模块1: 细胞计数 -->
+    <!-- 模块 1: 细胞计数 -->
     <div id="module-cell" class="module-pane active-pane">
-        <div class="section-title">细胞计数</div>
+        <div class="section-title">
+            <span>细胞计数与稀释调整</span>
+        </div>
         <div class="input-grid">
-            <div class="input-field"><label>四角总数 (个)</label><input type="number" id="cell_total" value="88" step="1"></div>
-            <div class="input-field"><label>稀释倍数</label><input type="number" id="cell_dilution" value="100" step="1"></div>
-            <div class="input-field"><label>当前体积 (mL)</label><input type="number" id="cell_vol" value="5" step="0.1"></div>
-            <div class="input-field" id="cell_target_conc_field"><label>目的浓度 (10⁶/mL)</label><input type="number" id="cell_target_conc" value="1" step="0.1"></div>
-            <div class="input-field" id="cell_need_field"><label>所需细胞数 (10⁶个)</label><input type="number" id="cell_need" value="10" step="0.5"></div>
+            <div class="input-field" id="cell_total_field"><label>四角大格总数</label><input type="number" id="cell_total" value="88" min="0"></div>
+            <div class="input-field" id="cell_dilution_field"><label>稀释倍数</label><input type="number" id="cell_dilution" value="10" min="1"></div>
+            <div class="input-field"><label>当前悬液体积（mL）</label><input type="number" id="cell_vol" value="5" min="0" step="0.1"></div>
             <div class="input-field"><label>计算模式</label>
                 <select id="cell_mode">
                     <option value="adjust">浓度调整</option>
                     <option value="obtain">细胞获取</option>
+                    <option value="known">已知浓度</option>
+                </select>
+            </div>
+            <div class="input-field" id="cell_target_conc_field"><label>目标细胞浓度（×10⁶ cells/mL）</label><input type="number" id="cell_target_conc" value="1" min="0" step="0.1"></div>
+            <div class="input-field hidden-input" id="cell_need_field"><label>需要细胞数（×10⁶ cells）</label><input type="number" id="cell_need" value="10" min="0" step="0.5"></div>
+            <div class="input-field hidden-input" id="cell_known_conc_field"><label>已知细胞浓度（×10⁶ cells/mL）</label><input type="number" id="cell_known_conc" value="2" min="0" step="0.1"></div>
+        </div>
+        <div class="result-panel" id="cellResult"></div>
+        <div class="note">计算公式：细胞浓度 (10⁶ 个/mL) = (4大格总数 / 4) × 10⁴ × 稀释倍数 / 10⁶</div>
+    </div>
+
+    <!-- 模块 2: 多片段重组 -->
+    <div id="module-recomb" class="module-pane">
+        <div class="section-title">多片段同源重组计算</div>
+        <div class="input-grid">
+            <div class="input-field"><label>载体长度（bp）</label><input type="number" id="hr_vector_bp" value="12000"></div>
+            <div class="input-field"><label>载体浓度（ng/μL）</label><input type="number" id="hr_vector_conc" value="1000"></div>
+            <div class="input-field"><label>载体加入质量（ng）</label><input type="number" id="hr_vector_mass" value="100"></div>
+            <div class="input-field"><label>插入片段数量</label>
+                <select id="fragment_count">
+                    <option value="1">1 个片段</option>
+                    <option value="2">2 个片段</option>
+                    <option value="3" selected>3 个片段</option>
+                    <option value="4">4 个片段</option>
+                    <option value="5">5 个片段</option>
                 </select>
             </div>
         </div>
-        <div class="result-panel" id="cellResult"></div>
-        <div class="note">💡 浓度(10⁶/mL) = (四角总数/4)×10000×稀释倍数/1e6 &nbsp; 根据模式显示对应结果</div>
-    </div>
-
-    <!-- 模块2: 多片段重组 -->
-    <div id="module-recomb" class="module-pane">
-        <div class="section-title">多片段同源重组</div>
-        <div class="input-grid">
-            <div class="input-field"><label>载体长度 (bp)</label><input type="number" id="hr_vector_bp" value="12000" step="100"></div>
-            <div class="input-field"><label>载体浓度 (ng/μL)</label><input type="number" id="hr_vector_conc" value="1000" step="10"></div>
-            <div class="input-field"><label>载体质量 (ng)</label><input type="number" id="hr_vector_mass" value="100" step="10"></div>
-            <div class="input-field"><label>片段个数</label><select id="fragment_count">
-                <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
-            </select></div>
-        </div>
-        <div id="fragments_container" class="fragments-container"></div>
+        <div id="fragments_container"></div>
         <div class="result-panel" id="multiFragmentResult"></div>
-        <div class="note">📐 片段质量(ng) = (载体质量/载体bp) × 摩尔比 × 片段bp</div>
+        <div class="note">计算公式：片段质量 (ng) = (载体质量 / 载体长度) × 摩尔比例 × 片段长度</div>
     </div>
 
-    <!-- 模块3: 铺板计算 -->
+    <!-- 模块 3: 铺板计算 -->
     <div id="module-plating" class="module-pane">
-        <div class="section-title">铺板计算</div>
+        <div class="section-title">细胞铺板与接种换算</div>
         <div class="input-grid">
-            <div class="input-field"><label>培养容器</label><select id="plate_type">
-                <option value="6">6孔板 (9.6 cm², 2 mL)</option>
-                <option value="12">12孔板 (3.8 cm², 1 mL)</option>
-                <option value="24">24孔板 (1.9 cm², 0.5 mL)</option>
-                <option value="48">48孔板 (0.7 cm², 0.2 mL)</option>
-                <option value="96">96孔板 (0.3 cm², 0.1 mL)</option>
-                <option value="10cm">10 cm 培养皿 (55 cm², 10 mL)</option>
-            </select></div>
-            <div class="input-field"><label>孔/皿面积 (cm²)</label><input type="number" id="area_per_well" value="9.6" step="0.1"></div>
-            <div class="input-field"><label>培养基体积 (mL)</label><input type="number" id="med_per_well" value="2" step="0.1"></div>
-            <div class="input-field"><label>培养瓶面积 (cm²)</label><input type="number" id="flask_area" value="75" step="5"></div>
-            <div class="input-field"><label>培养瓶汇合度 (%)</label><input type="number" id="flask_confluence" value="90" step="5"></div>
-            <div class="input-field"><label>所需孔/皿数</label><input type="number" id="target_wells" value="4" step="1"></div>
-            <div class="input-field"><label>接种汇合度 (%)</label><input type="number" id="seed_confluence" value="60" step="5"></div>
-            <div class="input-field"><label>重悬体积 (mL)</label><input type="number" id="resuspend_vol" value="2" step="0.5"></div>
+            <div class="input-field"><label>预设规格</label>
+                <select id="plate_type">
+                    <option value="6">6孔板 (9.6 cm², 2 mL)</option>
+                    <option value="12">12孔板 (3.8 cm², 1 mL)</option>
+                    <option value="24">24孔板 (1.9 cm², 0.5 mL)</option>
+                    <option value="48">48孔板 (0.7 cm², 0.2 mL)</option>
+                    <option value="96">96孔板 (0.3 cm², 0.1 mL)</option>
+                    <option value="10cm">10 cm 皿 (55 cm², 10 mL)</option>
+                </select>
+            </div>
+            <div class="input-field"><label>单孔/皿面积（cm²）</label><input type="number" id="area_per_well" value="9.6" step="0.1"></div>
+            <div class="input-field"><label>单孔培养基体积（mL）</label><input type="number" id="med_per_well" value="2" step="0.1"></div>
+            <div class="input-field"><label>源培养面积（cm²）</label><input type="number" id="flask_area" value="75"></div>
+            <div class="input-field"><label>源瓶汇合度 (%)</label><input type="number" id="flask_confluence" value="90"></div>
+            <div class="input-field"><label>目标接种孔/皿数</label><input type="number" id="target_wells" value="4"></div>
+            <div class="input-field"><label>目标接种密度 (%)</label><input type="number" id="seed_confluence" value="60"></div>
+            <div class="input-field"><label>重悬体积（mL）</label><input type="number" id="resuspend_vol" value="2"></div>
         </div>
         <div class="result-panel" id="platingResult"></div>
-        <div class="note">🔁 悬液(μL) = (孔数×孔面积×接种汇合%) / (瓶面积×瓶汇合%) × 重悬体积 × 1000</div>
     </div>
 
-    <!-- 模块4: 转染体系（初始组数=2） -->
+    <!-- 模块 4: 转染体系 -->
     <div id="module-transfect" class="module-pane">
-        <div class="section-title">转染复合物计算</div>
+        <div class="section-title">转染复合物体系计算</div>
         <div class="input-grid">
-            <div class="input-field"><label>质粒数量</label><select id="plasmid_count">
-                <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
-            </select></div>
-            <div class="input-field"><label>PEI/DNA 比值</label><input type="number" id="pei_ratio" value="2.5" step="0.1"></div>
-            <div class="input-field"><label>组数</label><select id="group_count">
-                <option value="1">1</option>
-                <option value="2" selected>2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
-            </select></div>
+            <div class="input-field"><label>质粒种类数</label>
+                <select id="plasmid_count">
+                    <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option>
+                </select>
+            </div>
+            <div class="input-field"><label>PEI:DNA 质量比（w/w）</label><input type="number" id="pei_ratio" value="2.5" step="0.1"></div>
+            <div class="input-field"><label>实验组数</label>
+                <select id="group_count">
+                    <option value="1">1 组</option><option value="2" selected>2 组</option><option value="3">3 组</option><option value="4">4 组</option>
+                </select>
+            </div>
         </div>
         <div id="transfection_groups"></div>
-        <div class="result-panel" id="transfectionResult" style="flex-direction: column; gap: 12px; align-items: stretch;"></div>
-        <div class="note">💡 质粒体积(μL) = (质量(μg) × 1000) / 浓度(ng/μL)</div>
+        <div class="result-panel" id="transfectionResult" style="flex-direction: column;"></div>
     </div>
 
-    <!-- 模块5: 溶液配制 -->
+    <!-- 模块 5: 溶液配制 -->
     <div id="module-solution" class="module-pane">
-        <div class="section-title">溶液稀释计算</div>
+        <div class="section-title">母液稀释与溶液配制 (C₁V₁ = C₂V₂)</div>
         <div class="input-grid">
             <div class="input-field">
-                <label>母液浓度</label>
-                <div style="display:flex;gap:6px;">
-                    <input type="number" id="stock_conc_val" value="10" step="any" style="flex:2;">
+                <label>母液浓度（单位）</label>
+                <div style="display:flex; gap:6px;">
+                    <input type="number" id="stock_conc_val" value="10" style="flex:2;">
                     <select id="stock_conc_unit" style="flex:1;">
                         <option value="mg_per_ml">mg/mL</option>
                         <option value="ug_per_ml">μg/mL</option>
@@ -367,9 +477,9 @@
                 </div>
             </div>
             <div class="input-field">
-                <label>目的浓度</label>
-                <div style="display:flex;gap:6px;">
-                    <input type="number" id="target_conc_val" value="8" step="any" style="flex:2;">
+                <label>目标浓度（单位）</label>
+                <div style="display:flex; gap:6px;">
+                    <input type="number" id="target_conc_val" value="8" style="flex:2;">
                     <select id="target_conc_unit" style="flex:1;">
                         <option value="ug_per_ml">μg/mL</option>
                         <option value="mg_per_ml">mg/mL</option>
@@ -379,9 +489,9 @@
                 </div>
             </div>
             <div class="input-field">
-                <label>目的体积</label>
-                <div style="display:flex;gap:6px;">
-                    <input type="number" id="target_vol_val" value="50" step="any" style="flex:2;">
+                <label>目标最终体积（单位）</label>
+                <div style="display:flex; gap:6px;">
+                    <input type="number" id="target_vol_val" value="50" style="flex:2;">
                     <select id="target_vol_unit" style="flex:1;">
                         <option value="ml">mL</option>
                         <option value="ul">μL</option>
@@ -389,200 +499,432 @@
                 </div>
             </div>
         </div>
-        <div class="result-panel" id="solutionResult" style="flex-direction:column;gap:12px;"></div>
-        <div class="note">📌 浓度统一换算为 μg/mL 后计算：1 mg/mL = 1000 μg/mL，1 μg/μL = 1000 μg/mL，1 ng/μL = 1 μg/mL。</div>
+        <div class="result-panel" id="solutionResult"></div>
     </div>
 
-    <!-- 模块6: PCR 预混液 -->
+    <!-- 模块 6: PCR 预混液 -->
     <div id="module-pcr" class="module-pane">
-        <div class="section-title">PCR 预混液</div>
+        <div class="section-title">PCR Master Mix 配制体系</div>
         <div class="input-grid">
-            <div class="input-field"><label>样本数</label><input type="number" id="pcr_samples" value="5" step="1"></div>
-            <div class="input-field"><label>单反应预混体积 (μL)</label><input type="number" id="pcr_sys" value="10" step="1"></div>
-            <div class="input-field"><label>聚合酶 (μL/反应)</label><input type="number" id="pcr_pol" value="5" step="0.5"></div>
-            <div class="input-field"><label>上游引物 (μL/反应)</label><input type="number" id="pcr_fwd" value="1" step="0.2"></div>
-            <div class="input-field"><label>下游引物 (μL/反应)</label><input type="number" id="pcr_rev" value="1" step="0.2"></div>
+            <div class="input-field"><label>反应数</label><input type="number" id="pcr_samples" value="5"></div>
+            <div class="input-field"><label>单反应总体积（μL）</label><input type="number" id="pcr_sys" value="10"></div>
+            <div class="input-field"><label>2× Master Mix（μL/反应）</label><input type="number" id="pcr_pol" value="5" step="0.5"></div>
+            <div class="input-field"><label>上游引物（μL/反应）</label><input type="number" id="pcr_fwd" value="1" step="0.1"></div>
+            <div class="input-field"><label>下游引物（μL/反应）</label><input type="number" id="pcr_rev" value="1" step="0.1"></div>
+            <div class="input-field"><label>模板DNA（μL/反应）</label><input type="number" id="pcr_tpl" value="1" step="0.1"></div>
         </div>
         <div class="result-panel" id="pcrResult"></div>
-        <div class="note">🧪 ddH₂O = 预混总体积 − (聚合酶+引物)总体积，模板单独添加</div>
     </div>
 
-    <!-- 模块7: 滴度计算 -->
+    <!-- 模块 7: 滴度计算 & MOI -->
     <div id="module-titer" class="module-pane">
-        <div class="section-title">滴度计算 <span>病变/荧光/空斑数 · 科学计数法</span></div>
+        <div class="section-title">病毒滴度与 MOI 计算</div>
         <div class="input-grid">
-            <div class="input-field"><label>第一排病毒原液 (μL)</label><input type="number" id="titer_first_vol" value="10" step="0.1"></div>
-            <div class="input-field"><label>选择排数 (1-8)</label><select id="titer_row_select">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-                <option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
-            </select></div>
-            <div class="input-field"><label>该排病变/荧光/空斑总数</label><input type="number" id="titer_fluo_total" value="21" step="1"></div>
-            <div class="input-field"><label>重复组数 (孔数)</label><input type="number" id="titer_repeats" value="3" step="1" min="1"></div>
+            <div class="input-field"><label>首孔病毒体积（μL）</label><input type="number" id="titer_first_vol" value="10"></div>
+            <div class="input-field"><label>计算目标排数 (10倍梯度稀释)</label>
+                <select id="titer_row_select">
+                    <option value="1">第 1 排 (10⁰)</option>
+                    <option value="2">第 2 排 (10¹)</option>
+                    <option value="3">第 3 排 (10²)</option>
+                    <option value="4">第 4 排 (10³)</option>
+                    <option value="5" selected>第 5 排 (10⁴)</option>
+                    <option value="6">第 6 排 (10⁵)</option>
+                    <option value="7">第 7 排 (10⁶)</option>
+                </select>
+            </div>
+            <div class="input-field"><label>该排病变/阳性数总和</label><input type="number" id="titer_fluo_total" value="21"></div>
+            <div class="input-field"><label>复孔/重复组数</label><input type="number" id="titer_repeats" value="3" min="1"></div>
         </div>
-        <div class="scheme-container" id="dilution_scheme_container">
-            <div class="title">🧪 稀释示意</div>
-            <div id="dilution_scheme"></div>
+
+        <div style="margin: 16px 0;">
+            <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">梯度稀释预览</p>
+            <div class="table-wrapper"><div id="dilution_scheme"></div></div>
         </div>
-        <div class="result-panel" id="titerResult" style="flex-direction: column; gap: 12px;"></div>
-        <div class="note">📊 每排病毒原液量 = 第一排量 / 10^(排数-1)。平均计数 = 总数 / 重复组数。滴度(TU/mL) = (平均计数 × 1000) / 病毒原液量(μL)。结果以科学计数法展示。</div>
-        <div class="inline-sub-section">
-            <div class="inline-sub-title">MOI 与病毒体积计算 (滴度单位: 10⁶ TU/mL)</div>
+
+        <div class="result-panel" id="titerResult"></div>
+
+        <div style="margin-top: 28px; border-top: 1px dashed var(--border-color); padding-top: 20px;">
+            <div class="section-title" style="font-size: 1rem;">MOI 感染所需病毒量换算</div>
             <div class="input-grid">
-                <div class="input-field"><label>细胞数 (×10⁵ 个)</label><input type="number" id="moi_cell_count" value="10" step="0.5"></div>
-                <div class="input-field"><label>MOI</label><input type="number" id="moi_value" value="10" step="0.1"></div>
-                <div class="input-field"><label>病毒滴度 (10⁶ TU/mL)</label><input type="number" id="moi_titer" value="100" step="1"></div>
+                <div class="input-field"><label>待感染细胞数（cells）</label><input type="number" id="moi_cell_count" value="10"></div>
+                <div class="input-field"><label>目标 MOI</label><input type="number" id="moi_value" value="10"></div>
+                <div class="input-field"><label>病毒滴度（TU/mL）</label><input type="number" id="moi_titer" value="100"></div>
             </div>
             <div class="result-panel" id="moiResult"></div>
-            <div class="note">💡 病毒体积(μL) = (细胞数 × 10⁵ × MOI) / (滴度 × 10⁶) × 1000 &nbsp; 输入滴度单位为 10⁶ TU/mL，细胞数以 10⁵ 为单位。</div>
         </div>
     </div>
 
-    <!-- 模块8: 使用说明 -->
+    <!-- 模块 8: 使用说明 -->
     <div id="module-guide" class="module-pane">
-        <div class="guide-section">
-            <div class="guide-title">使用说明</div>
-            <div class="guide-grid">
-                <div class="guide-card"><h4>细胞计数</h4><p>浓度调整 + 细胞获取合并，通过模式切换选择。输入项根据模式动态显示。</p></div>
-                <div class="guide-card"><h4>多片段重组</h4><p>设定载体与片段参数，计算各片段质量与体积。</p></div>
-                <div class="guide-card"><h4>铺板计算</h4><p>计算细胞悬液体积和补液量。10cm皿面积55cm²。</p></div>
-                <div class="guide-card"><h4>转染体系</h4><p>支持多组，每组独立输入质粒质量与浓度。结果以表格展示，清晰直观。初始组数设为2。</p></div>
-                <div class="guide-card"><h4>溶液配制</h4><p>母液稀释计算，支持单位自动换算（mg/mL, μg/mL, μg/μL, ng/μL）。</p></div>
-                <div class="guide-card"><h4>PCR 预混液</h4><p>计算聚合酶、引物、ddH₂O体积，模板单独添加。</p></div>
-                <div class="guide-card"><h4>滴度计算</h4><p>10倍梯度稀释，输入病变/荧光/空斑总数及重复数，科学计数法展示滴度。MOI计算滴度单位10⁶ TU/mL。</p></div>
-            </div>
+        <div class="section-title">功能板块输入参数与计算逻辑说明</div>
+        
+        <div class="guide-card">
+            <div class="guide-card-header">1. 细胞计数与稀释调整</div>
+            <ul>
+                <li><strong>输入：</strong>计数板四角大格细胞总数、稀释倍数、当前悬液体积、目标浓度或所需细胞数、计算模式。</li>
+                <li><strong>计算：</strong>细胞浓度 = (四角总数 / 4) × 10⁴ × 稀释倍数 / 10⁶ (×10⁶ 个/mL)。<br>
+                浓度调整模式：补液体积 = (当前浓度 × 当前体积 / 目标浓度) - 当前体积。<br>
+                按量获取模式：取样体积 = 所需细胞数 / 当前浓度。</li>
+            </ul>
+        </div>
+
+        <div class="guide-card">
+            <div class="guide-card-header">2. 多片段同源重组计算</div>
+            <ul>
+                <li><strong>输入：</strong>载体长度 (bp)、浓度 (ng/μL)、投入质量 (ng)，各插入片段长度、浓度与摩尔比。</li>
+                <li><strong>计算：</strong>片段所需质量 (ng) = (载体质量 / 载体 bp) × 摩尔比 × 片段 bp。<br>
+                各组分加样体积 (μL) = 所需质量 (ng) / 浓度 (ng/μL)。</li>
+            </ul>
+        </div>
+
+        <div class="guide-card">
+            <div class="guide-card-header">3. 细胞铺板与接种换算</div>
+            <ul>
+                <li><strong>输入：</strong>培养容器规格（6/12/24/48/96孔板或10 cm皿）、源瓶面积与汇合度、目标孔数、接种密度、重悬体积。</li>
+                <li><strong>计算：</strong>悬液体积 (μL) = (孔数 × 孔面积 × 接种率%) / (瓶面积 × 瓶汇合率%) × 重悬体积 × 1000。<br>
+                单孔补液 = 标准培养基体积 - 单孔接种悬液量。</li>
+            </ul>
+        </div>
+
+        <div class="guide-card">
+            <div class="guide-card-header">4. 转染复合物体系计算</div>
+            <ul>
+                <li><strong>输入：</strong>质粒种类数、PEI:DNA 质量比 (w/w)、各组中每种质粒的质量 (μg) 与浓度 (ng/μL)。</li>
+                <li><strong>计算：</strong>质粒加样体积 (μL) = 质量 (μg) × 1000 / 浓度 (ng/μL)。<br>
+                PEI 体积 (μL) = 总 DNA 质量 (μg) × PEI/DNA 比值。</li>
+            </ul>
+        </div>
+
+        <div class="guide-card">
+            <div class="guide-card-header">5. 溶液配制（母液稀释）</div>
+            <ul>
+                <li><strong>输入：</strong>母液浓度与单位、目标浓度与单位、目标最终体积。</li>
+                <li><strong>计算：</strong>基于 C₁V₁ = C₂V₂，自动换算不同单位 (mg/mL, μg/mL, μg/μL, ng/μL)。<br>
+                母液吸取量 (μL) = 目标浓度 × 目标体积 / 母液浓度。溶剂体积 = 目标体积 - 母液体积。</li>
+            </ul>
+        </div>
+
+        <div class="guide-card">
+            <div class="guide-card-header">6. PCR Master Mix 配制</div>
+            <ul>
+                <li><strong>输入：</strong>样品数、单反应体系体积、各组分每反应用量（聚合酶、引物、模板DNA）。</li>
+                <li><strong>计算：</strong>各组分总量 = 单反应用量 × 样品数。<br>
+                ddH₂O 补足 = 预混总体积 - 各组分总量之和。</li>
+            </ul>
+        </div>
+
+        <div class="guide-card">
+            <div class="guide-card-header">7. 病毒滴度与 MOI 计算</div>
+            <ul>
+                <li><strong>输入：</strong>首排病毒原液体积、选定排数（10倍梯度）、该排阳性总数、复孔数；MOI 部分输入细胞数、目标 MOI、病毒滴度。</li>
+                <li><strong>计算：</strong>滴度 (TU/mL) = (平均阳性数 / 当前排原液体积 μL) × 1000。<br>
+                所需病毒体积 (μL) = (细胞数 × MOI / 滴度) × 1000。</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 历史记录模态框 -->
+<div class="modal-overlay" id="historyModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <span style="font-weight:700;">各模块最近计算历史</span>
+            <button style="border:none; background:transparent; font-size:1.2rem; cursor:pointer;" id="btn-close-history">&times;</button>
+        </div>
+        <div class="modal-body" id="modalHistoryList"></div>
+        <div class="modal-footer">
+            <button style="background:#fee2e2; color:#991b1b; border:none; padding:8px 16px; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;" id="btn-clear-history">清空记录</button>
         </div>
     </div>
 </div>
 
 <script>
-    // ======================= 模块切换 =======================
+    // --- 历史记录存储 ---
+    const MODULE_NAMES = {
+        cell: '细胞计数', recomb: '多片段重组', plating: '铺板计算',
+        transfect: '转染体系', solution: '溶液配制', pcr: 'PCR 预混液',
+        titer: '滴度计算', moi: 'MOI 计算'
+    };
+
+    function recordHistory(key, inputsObj, outputsObj, fieldsObj) {
+        let records = JSON.parse(localStorage.getItem('labsuite_history') || '[]');
+        if (!Array.isArray(records)) records = [];
+        const now = new Date();
+        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        records.unshift({
+            moduleName: MODULE_NAMES[key] || key,
+            moduleKey: key,
+            time: time,
+            stamp: now.getTime(),
+            inputs: inputsObj,
+            outputs: outputsObj,
+            fields: fieldsObj || {}
+        });
+        if (records.length > 10) records = records.slice(0, 10);
+        localStorage.setItem('labsuite_history', JSON.stringify(records));
+        // Also save inputs for persistence
+        saveLastInputs(key, fieldsObj);
+    }
+
+    function saveLastInputs(key, fieldsObj) {
+        let last = JSON.parse(localStorage.getItem('labsuite_last_inputs') || '{}');
+        last[key] = fieldsObj || {};
+        localStorage.setItem('labsuite_last_inputs', JSON.stringify(last));
+    }
+
+    function restoreLastInputs(key) {
+        let last = JSON.parse(localStorage.getItem('labsuite_last_inputs') || '{}');
+        const fields = last[key];
+        if (!fields) return;
+        Object.entries(fields).forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) { el.value = val; }
+        });
+    }
+
+    function restoreHistory(moduleKey, fields) {
+        // Close modal
+        document.getElementById('historyModal').style.display = 'none';
+        // Switch tab
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        const targetBtn = document.querySelector(`.tab-btn[data-module="${moduleKey}"]`);
+        if (targetBtn) targetBtn.classList.add('active');
+        document.querySelectorAll('.module-pane').forEach(p => p.classList.remove('active-pane'));
+        const pane = document.getElementById(`module-${moduleKey}`);
+        if (pane) pane.classList.add('active-pane');
+        // Restore field values
+        Object.entries(fields).forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = val;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        // Trigger render + calc (moi routes to titer tab)
+        const realKey = moduleKey === 'moi' ? 'titer' : moduleKey;
+        if (realKey === 'cell') updateCellCalc();
+        if (realKey === 'recomb') { renderFragments(); setTimeout(updateMultiFragment, 200); }
+        if (realKey === 'plating') updatePlating();
+        if (realKey === 'transfect') { renderTransfectionGroups(); setTimeout(updateTransfection, 200); }
+        if (realKey === 'solution') updateSolution();
+        if (realKey === 'pcr') updatePCR();
+        if (realKey === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
+    }
+
+    function renderModalHistory() {
+        let records = JSON.parse(localStorage.getItem('labsuite_history') || '[]');
+        // Migrate old object-format history to array
+        if (!Array.isArray(records)) {
+            records = Object.values(records).sort((a,b) => (b.stamp||0) - (a.stamp||0)).slice(0,10);
+        }
+        const container = document.getElementById('modalHistoryList');
+
+        if (records.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:30px 0;">暂无记录（最近十条）</div>';
+            return;
+        }
+
+        let html = '';
+        records.forEach(item => {
+            html += `
+                <div class="hist-card" onclick="restoreHistory('${item.moduleKey}', ${JSON.stringify(item.fields || {}).replace(/"/g, '&quot;')})" title="点击恢复此记录">
+                    <div class="hist-header">
+                        <span>${item.moduleName}</span>
+                        <span style="font-weight:normal; color:#94a3b8;">${item.time}</span>
+                    </div>
+                    <div style="color:#475569;">
+                        <div><strong>输入：</strong> ${formatObj(item.inputs)}</div>
+                        <div style="color:var(--primary-dark); margin-top:4px;"><strong>结果：</strong> ${formatObj(item.outputs)}</div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function formatObj(obj) {
+        if (!obj) return '-';
+        return Object.entries(obj).map(([k, v]) => `${k}: ${v}`).join(' | ');
+    }
+
+    // --- Tab 切换逻辑 ---
     const tabs = document.querySelectorAll('.tab-btn');
     const panes = document.querySelectorAll('.module-pane');
     tabs.forEach(btn => {
         btn.addEventListener('click', () => {
-            const module = btn.getAttribute('data-module');
+            const mod = btn.getAttribute('data-module');
+            if (!mod) return;
             tabs.forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
-            panes.forEach(pane => pane.classList.remove('active-pane'));
-            document.getElementById(`module-${module}`).classList.add('active-pane');
-            if (module === 'transfect') renderTransfectionGroups();
-            if (module === 'recomb') renderFragments();
-            if (module === 'cell') updateCellCalc();
-            if (module === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
+            panes.forEach(p => p.classList.remove('active-pane'));
+            document.getElementById(`module-${mod}`).classList.add('active-pane');
+
+            // 恢复上次输入值
+            restoreLastInputs(mod);
+            // 模块切换重绘触发
+            if (mod === 'transfect') renderTransfectionGroups();
+            if (mod === 'recomb') renderFragments();
+            if (mod === 'cell') updateCellCalc();
+            if (mod === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
         });
     });
 
-    // ========= 1. 细胞计数 =========
+    // --- 防抖：输完才记录历史 ---
+    const debounceTimers = {};
+    function debounceRecord(key, fn) {
+        clearTimeout(debounceTimers[key]);
+        debounceTimers[key] = setTimeout(fn, 1200);
+    }
+
+    // --- 1. 细胞计数 ---
     function updateCellInputs() {
         const mode = document.getElementById('cell_mode').value;
-        const targetField = document.getElementById('cell_target_conc_field');
-        const needField = document.getElementById('cell_need_field');
-        if (mode === 'adjust') {
-            targetField.classList.remove('hidden-input');
-            needField.classList.add('hidden-input');
-        } else {
-            targetField.classList.add('hidden-input');
-            needField.classList.remove('hidden-input');
+        const totalF = document.getElementById('cell_total_field');
+        const dilF = document.getElementById('cell_dilution_field');
+        const targetF = document.getElementById('cell_target_conc_field');
+        const needF = document.getElementById('cell_need_field');
+        const knownF = document.getElementById('cell_known_conc_field');
+
+        if (mode === 'known') {
+            totalF.classList.add('hidden-input');
+            dilF.classList.add('hidden-input');
+            targetF.classList.remove('hidden-input');
+            needF.classList.remove('hidden-input');
+            knownF.classList.remove('hidden-input');
+        } else if (mode === 'adjust') {
+            totalF.classList.remove('hidden-input');
+            dilF.classList.remove('hidden-input');
+            targetF.classList.remove('hidden-input');
+            needF.classList.add('hidden-input');
+            knownF.classList.add('hidden-input');
+        } else {  // obtain
+            totalF.classList.remove('hidden-input');
+            dilF.classList.remove('hidden-input');
+            targetF.classList.add('hidden-input');
+            needF.classList.remove('hidden-input');
+            knownF.classList.add('hidden-input');
         }
     }
+
     function updateCellCalc() {
         updateCellInputs();
         let total = parseFloat(document.getElementById('cell_total').value) || 0;
         let dilution = parseFloat(document.getElementById('cell_dilution').value) || 1;
         let curVol = parseFloat(document.getElementById('cell_vol').value) || 0;
-        let targetConc = parseFloat(document.getElementById('cell_target_conc').value) || 0;
-        let needCells = parseFloat(document.getElementById('cell_need').value) || 0;
         let mode = document.getElementById('cell_mode').value;
 
-        let currentConc = ((total / 4) * 10000 * dilution) / 1000000;
+        let currentConc = mode === 'known'
+            ? (parseFloat(document.getElementById('cell_known_conc').value) || 0)
+            : ((total / 4) * 10000 * dilution) / 1000000;
         let totalCells = curVol * currentConc;
-        let finalVol = (targetConc > 0) ? (totalCells / targetConc) : 0;
-        let extraVol = finalVol - curVol;
-        let requiredVol = (currentConc > 0) ? (needCells / currentConc) : 0;
 
-        let html = '';
-        html += `<div class="result-badge"><strong>当前浓度</strong><span>${currentConc.toFixed(3)} ×10⁶/mL</span></div>`;
-        html += `<div class="result-badge"><strong>总细胞数</strong><span>${totalCells.toFixed(2)} ×10⁶</span></div>`;
+        let html = `
+            <div class="result-badge"><label>当前细胞浓度</label><div class="val">${currentConc.toFixed(3)} <span style="font-size:0.8rem">×10⁶ 个/mL</span></div></div>
+            <div class="result-badge"><label>悬液总细胞量</label><div class="val">${totalCells.toFixed(2)} <span style="font-size:0.8rem">×10⁶ 个</span></div></div>
+        `;
 
-        if (mode === 'adjust') {
-            html += `<div class="result-badge"><strong>终体积</strong><span>${finalVol.toFixed(2)} mL</span></div>`;
-            html += `<div class="result-badge"><strong>额外体积</strong><span>${extraVol.toFixed(2)} mL</span></div>`;
-        } else {
-            html += `<div class="result-badge"><strong>获取所需体积</strong><span>${(requiredVol*1000).toFixed(0)} μL (${requiredVol.toFixed(3)} mL)</span></div>`;
+        let inputs = mode === 'known'
+            ? { "已知浓度": `${currentConc}`, "体积": `${curVol} mL` }
+            : { "4格总数": total, "稀释": dilution, "体积": `${curVol} mL` };
+        let outputs = { "浓度": `${currentConc.toFixed(3)}x10^6 个/mL`, "总量": `${totalCells.toFixed(2)}x10^6 个` };
+
+        if (mode === 'adjust' || mode === 'known') {
+            let targetConc = parseFloat(document.getElementById('cell_target_conc').value) || 0;
+            let finalVol = targetConc > 0 ? (totalCells / targetConc) : 0;
+            if (targetConc > 0 && targetConc > currentConc) {
+                html += `
+                    <div class="result-badge"><label>调整后终体积</label><div class="val">${finalVol.toFixed(2)} <span style="font-size:0.8rem">mL</span></div></div>
+                    <div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>操作提示</label><div class="val" style="color:#d97706; font-size:1rem;">离心去上清，重悬至 ${finalVol.toFixed(2)} mL</div></div>
+                `;
+                outputs["操作"] = `离心重悬至 ${finalVol.toFixed(2)} mL`;
+            } else {
+                let extraVol = finalVol - curVol;
+                let label = extraVol >= 0 ? '需补加培养基' : '需去除培养基';
+                html += `
+                    <div class="result-badge"><label>调整后终体积</label><div class="val">${finalVol.toFixed(2)} <span style="font-size:0.8rem">mL</span></div></div>
+                    <div class="result-badge"><label>${label}</label><div class="val" style="color:var(--accent);">${Math.abs(extraVol).toFixed(2)} <span style="font-size:0.8rem">mL</span></div></div>
+                `;
+                outputs["体积调整"] = `${label}: ${Math.abs(extraVol).toFixed(2)} mL`;
+            }
         }
-        if (currentConc === 0) html += `<div class="result-badge">⚠️ 浓度为零</div>`;
+        if (mode === 'obtain' || mode === 'known') {
+            let needCells = parseFloat(document.getElementById('cell_need').value) || 0;
+            let reqVol = currentConc > 0 ? (needCells / currentConc) : 0;
+            html += `
+                <div class="result-badge"><label>获取所需悬液体积</label><div class="val" style="color:var(--accent);">${(reqVol*1000).toFixed(0)} <span style="font-size:0.8rem">μL (${reqVol.toFixed(3)} mL)</span></div></div>
+            `;
+            outputs["获取体积"] = `${(reqVol*1000).toFixed(0)} μL`;
+        }
+
         document.getElementById('cellResult').innerHTML = html;
+        debounceRecord("hist", () => { recordHistory('cell', inputs, outputs, {
+            cell_total: total, cell_dilution: dilution, cell_vol: curVol, cell_mode: mode,
+            cell_target_conc: document.getElementById('cell_target_conc').value,
+            cell_need: document.getElementById('cell_need').value,
+            cell_known_conc: document.getElementById('cell_known_conc').value
+        }); });
     }
 
-    // ========= 2. 多片段重组 =========
+    // --- 2. 多片段重组 ---
     let currentFragmentCount = 3;
     function renderFragments() {
         let count = parseInt(document.getElementById('fragment_count').value) || 3;
         currentFragmentCount = count;
         const container = document.getElementById('fragments_container');
-        let oldVals = [];
-        for (let i = 1; i <= 5; i++) {
-            let bpEl = document.getElementById(`frag${i}_bp`);
-            let concEl = document.getElementById(`frag${i}_conc`);
-            let ratioEl = document.getElementById(`frag${i}_ratio`);
-            if (bpEl && concEl && ratioEl) oldVals.push({ bp: bpEl.value, conc: concEl.value, ratio: ratioEl.value });
-            else oldVals.push(null);
-        }
         container.innerHTML = '';
         for (let i = 1; i <= count; i++) {
-            const defaultBp = [2000,1500,800,600,400][i-1] || 400;
-            const defaultConc = [500,400,300,250,200][i-1] || 200;
-            const saved = oldVals[i-1];
-            const bpVal = saved?.bp || defaultBp;
-            const concVal = saved?.conc || defaultConc;
-            const ratioVal = saved?.ratio || 2;
             const fragDiv = document.createElement('div');
-            fragDiv.className = 'fragment-card';
+            fragDiv.className = 'card-item';
             fragDiv.innerHTML = `
-                <div style="font-weight:600; margin-bottom:8px;">📌 片段 ${i}</div>
-                <div style="display:flex; flex-wrap:wrap; gap:12px;">
-                    <div class="input-field" style="flex:1;"><label>长度 (bp)</label><input type="number" id="frag${i}_bp" value="${bpVal}" step="10"></div>
-                    <div class="input-field" style="flex:1;"><label>浓度 (ng/μL)</label><input type="number" id="frag${i}_conc" value="${concVal}" step="5"></div>
-                    <div class="input-field" style="flex:1;"><label>摩尔比</label><input type="number" id="frag${i}_ratio" value="${ratioVal}" step="0.5"></div>
+                <div class="card-item-title">插入片段 ${i}</div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">
+                    <div class="input-field"><label>长度（bp）</label><input type="number" id="frag${i}_bp" value="${[2000,1500,800,600,400][i-1] || 500}"></div>
+                    <div class="input-field"><label>浓度（ng/μL）</label><input type="number" id="frag${i}_conc" value="${[500,400,300,250,200][i-1] || 100}"></div>
+                    <div class="input-field"><label>摩尔比 (片段:载体)</label><input type="number" id="frag${i}_ratio" value="2" step="0.5"></div>
                 </div>
             `;
             container.appendChild(fragDiv);
         }
         for (let i = 1; i <= count; i++) {
-            ['bp','conc','ratio'].forEach(suffix => {
-                const el = document.getElementById(`frag${i}_${suffix}`);
-                if (el) el.addEventListener('input', updateMultiFragment);
+            ['bp','conc','ratio'].forEach(s => {
+                document.getElementById(`frag${i}_${s}`).addEventListener('input', updateMultiFragment);
             });
         }
         updateMultiFragment();
     }
+
     function updateMultiFragment() {
         let vecBp = parseFloat(document.getElementById('hr_vector_bp').value) || 1;
         let vecConc = parseFloat(document.getElementById('hr_vector_conc').value) || 1;
         let vecMass = parseFloat(document.getElementById('hr_vector_mass').value) || 0;
-        let count = currentFragmentCount;
-        let resultsHTML = `<div class="result-badge"><strong>载体体积</strong><span>${(vecMass/vecConc).toFixed(2)} μL</span></div>`;
-        let totalFragMass = 0;
-        for (let i = 1; i <= count; i++) {
+        let vecVol = vecMass / vecConc;
+
+        let html = `<div class="result-badge"><label>载体所需体积</label><div class="val">${vecVol.toFixed(2)} <span style="font-size:0.8rem">μL</span></div></div>`;
+        let inputs = { "载体": `${vecBp} bp` };
+        let outputs = { "载体体积": `${vecVol.toFixed(2)} μL` };
+
+        for (let i = 1; i <= currentFragmentCount; i++) {
             let bp = parseFloat(document.getElementById(`frag${i}_bp`)?.value) || 1;
             let conc = parseFloat(document.getElementById(`frag${i}_conc`)?.value) || 1;
             let ratio = parseFloat(document.getElementById(`frag${i}_ratio`)?.value) || 1;
-            let requiredMass = (vecMass / vecBp) * ratio * bp;
-            let requiredVol = requiredMass / conc;
-            totalFragMass += requiredMass;
-            resultsHTML += `<div class="result-badge"><strong>片段 ${i}</strong><span>质量 ${requiredMass.toFixed(1)} ng | 体积 ${requiredVol.toFixed(2)} μL</span></div>`;
+            let reqMass = (vecMass / vecBp) * ratio * bp;
+            let reqVol = reqMass / conc;
+            html += `<div class="result-badge"><label>片段 ${i} 体积 (${reqMass.toFixed(1)} ng)</label><div class="val" style="color:var(--accent);">${reqVol.toFixed(2)} <span style="font-size:0.8rem">μL</span></div></div>`;
+            outputs[`片段${i}`] = `${reqVol.toFixed(2)} μL`;
         }
-        resultsHTML += `<div class="result-badge"><strong>总片段</strong><span>${totalFragMass.toFixed(1)} ng</span></div>`;
-        document.getElementById('multiFragmentResult').innerHTML = resultsHTML;
+
+        document.getElementById('multiFragmentResult').innerHTML = html;
+        debounceRecord("hist", () => { recordHistory('recomb', inputs, outputs, {
+            hr_vector_bp: document.getElementById('hr_vector_bp').value,
+            hr_vector_conc: document.getElementById('hr_vector_conc').value,
+            hr_vector_mass: document.getElementById('hr_vector_mass').value,
+            fragment_count: document.getElementById('fragment_count').value
+        }); });
     }
 
-    // ========= 3. 铺板计算 =========
+    // --- 3. 铺板计算 ---
     function updatePlating() {
-        let plateSelect = document.getElementById('plate_type').value;
-        const areaMap = {6:9.6,12:3.8,24:1.9,48:0.7,96:0.3,"10cm":55};
-        const volMap = {6:2,12:1,24:0.5,48:0.2,96:0.1,"10cm":10};
-        document.getElementById('area_per_well').value = areaMap[plateSelect];
-        document.getElementById('med_per_well').value = volMap[plateSelect];
         let areaWell = parseFloat(document.getElementById('area_per_well').value) || 0;
         let medWell = parseFloat(document.getElementById('med_per_well').value) || 0;
         let flaskArea = parseFloat(document.getElementById('flask_area').value) || 0;
@@ -590,23 +932,30 @@
         let wells = parseFloat(document.getElementById('target_wells').value) || 0;
         let seedConf = parseFloat(document.getElementById('seed_confluence').value) || 0;
         let resusVol = parseFloat(document.getElementById('resuspend_vol').value) || 0;
-        let numerator = wells * areaWell * (seedConf/100);
-        let denominator = flaskArea * (flaskConf/100);
-        let requiredVolUl = (denominator !== 0 && flaskArea > 0) ? (numerator / denominator) * resusVol * 1000 : 0;
-        let perWellVol = wells > 0 ? requiredVolUl/wells : 0;
-        let medPerWellUl = medWell * 1000;
-        let singleMedVol = medPerWellUl - perWellVol;
-        let totalMed = singleMedVol * wells;
-        let containerType = (plateSelect === "10cm") ? "皿" : "孔";
+
+        let num = wells * areaWell * (seedConf / 100);
+        let den = flaskArea * (flaskConf / 100);
+        let reqVolUl = den > 0 ? (num / den) * resusVol * 1000 : 0;
+        let perWellVol = wells > 0 ? reqVolUl / wells : 0;
+        let singleMedVol = (medWell * 1000) - perWellVol;
+
         document.getElementById('platingResult').innerHTML = `
-            <div class="result-badge"><strong>悬液体积</strong><span>${requiredVolUl.toFixed(1)} μL</span></div>
-            <div class="result-badge"><strong>单${containerType}接种</strong><span>${perWellVol.toFixed(1)} μL</span></div>
-            <div class="result-badge"><strong>单${containerType}补液</strong><span>${singleMedVol.toFixed(1)} μL</span></div>
-            <div class="result-badge"><strong>总培养基</strong><span>${totalMed.toFixed(1)} μL</span></div>
+            <div class="result-badge"><label>需要细胞悬液总量</label><div class="val">${reqVolUl.toFixed(1)} <span style="font-size:0.8rem">μL</span></div></div>
+            <div class="result-badge"><label>每孔接种悬液量</label><div class="val">${perWellVol.toFixed(1)} <span style="font-size:0.8rem">μL</span></div></div>
+            <div class="result-badge"><label>每孔需补充培养基</label><div class="val" style="color:var(--accent);">${singleMedVol.toFixed(1)} <span style="font-size:0.8rem">μL</span></div></div>
+            <div class="formula-line">公式：悬液 (μL) = (孔数 × 孔面积 × 接种率%) / (瓶面积 × 瓶汇合率%) × 重悬体积 × 1000</div>
         `;
+        debounceRecord("hist", () => { recordHistory('plating', { "目标孔数": wells }, { "总悬液": `${reqVolUl.toFixed(1)} μL` }, {
+            plate_type: document.getElementById('plate_type').value,
+            area_per_well: document.getElementById('area_per_well').value,
+            med_per_well: document.getElementById('med_per_well').value,
+            flask_area: document.getElementById('flask_area').value,
+            flask_confluence: document.getElementById('flask_confluence').value,
+            target_wells: wells, seed_confluence: seedConf, resuspend_vol: resusVol
+        }); });
     }
 
-    // ========= 4. 转染体系 =========
+    // --- 4. 转染体系 ---
     let currentPlasmidCount = 3;
     let currentGroupCount = 2;
     function renderTransfectionGroups() {
@@ -616,258 +965,246 @@
         currentGroupCount = gCount;
         const container = document.getElementById('transfection_groups');
         container.innerHTML = '';
+
         for (let g = 1; g <= gCount; g++) {
             const groupDiv = document.createElement('div');
-            groupDiv.className = 'group-card';
-            let html = `<div class="group-header">组 ${g}</div><div style="display:flex; flex-wrap:wrap; gap:12px;">`;
+            groupDiv.className = 'card-item';
+            let html = `<div class="card-item-title">实验组 ${g}</div><div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">`;
             for (let p = 1; p <= pCount; p++) {
-                let defaultMass = (p===1?4:(p===2?1:(p===3?3:1)));
-                let defaultConc = (p===1?500:(p===2?300:(p===3?200:300)));
                 html += `
-                    <div class="input-field" style="min-width:120px; flex:1;">
-                        <label>P${p} 质量 (μg)</label>
-                        <input type="number" id="g${g}_p${p}_mass" value="${defaultMass}" step="0.5">
-                    </div>
-                    <div class="input-field" style="min-width:120px; flex:1;">
-                        <label>P${p} 浓度 (ng/μL)</label>
-                        <input type="number" id="g${g}_p${p}_conc" value="${defaultConc}" step="10">
-                    </div>
+                    <div class="input-field"><label>P${p} 质量 (μg)</label><input type="number" id="g${g}_p${p}_mass" value="${p===1?4:(p===2?1:3)}"></div>
+                    <div class="input-field"><label>P${p} 浓度（ng/μL）</label><input type="number" id="g${g}_p${p}_conc" value="${p===1?500:(p===2?300:200)}"></div>
                 `;
             }
             html += `</div>`;
             groupDiv.innerHTML = html;
             container.appendChild(groupDiv);
         }
+
         for (let g = 1; g <= gCount; g++) {
             for (let p = 1; p <= pCount; p++) {
-                const massEl = document.getElementById(`g${g}_p${p}_mass`);
-                const concEl = document.getElementById(`g${g}_p${p}_conc`);
-                if (massEl) massEl.addEventListener('input', updateTransfection);
-                if (concEl) concEl.addEventListener('input', updateTransfection);
+                document.getElementById(`g${g}_p${p}_mass`)?.addEventListener('input', updateTransfection);
+                document.getElementById(`g${g}_p${p}_conc`)?.addEventListener('input', updateTransfection);
             }
         }
         updateTransfection();
     }
+
     function updateTransfection() {
-        let pCount = currentPlasmidCount;
-        let gCount = currentGroupCount;
         let peiRatio = parseFloat(document.getElementById('pei_ratio').value) || 2.5;
-        let html = `<div class="transfection-table-wrapper"><table class="transfection-table">
-            <thead><tr><th>组</th>`;
-        for (let p = 1; p <= pCount; p++) {
-            html += `<th>P${p} (μL)</th>`;
-        }
-        html += `<th>总DNA (μg)</th><th>PEI (μL)</th></tr></thead><tbody>`;
-        let hasData = false;
-        for (let g = 1; g <= gCount; g++) {
+        let html = `<div class="table-wrapper"><table class="lab-table"><thead><tr><th>实验组</th>`;
+        for (let p = 1; p <= currentPlasmidCount; p++) html += `<th>P${p} 体积 (μL)</th>`;
+        html += `<th>总 DNA (μg)</th><th>PEI 试剂体积 (μL)</th></tr></thead><tbody>`;
+
+        let outputs = {};
+        for (let g = 1; g <= currentGroupCount; g++) {
             let totalMass = 0;
             let vols = [];
-            let valid = true;
-            for (let p = 1; p <= pCount; p++) {
-                const massEl = document.getElementById(`g${g}_p${p}_mass`);
-                const concEl = document.getElementById(`g${g}_p${p}_conc`);
-                if (!massEl || !concEl) { valid = false; continue; }
-                let mass = parseFloat(massEl.value) || 0;
-                let conc = parseFloat(concEl.value) || 1;
+            for (let p = 1; p <= currentPlasmidCount; p++) {
+                let mass = parseFloat(document.getElementById(`g${g}_p${p}_mass`)?.value) || 0;
+                let conc = parseFloat(document.getElementById(`g${g}_p${p}_conc`)?.value) || 1;
                 totalMass += mass;
-                let vol = (mass * 1000) / conc;
-                vols.push(vol);
+                vols.push((mass * 1000) / conc);
             }
-            if (!valid || vols.length === 0) continue;
             let peiVol = totalMass * peiRatio;
-            html += `<tr><td><strong>${g}</strong></td>`;
-            vols.forEach(v => {
-                html += `<td>${v.toFixed(2)}</td>`;
-            });
-            html += `<td>${totalMass.toFixed(2)}</td><td>${peiVol.toFixed(2)}</td></tr>`;
-            hasData = true;
+            html += `<tr><td><strong>组 ${g}</strong></td>`;
+            vols.forEach(v => html += `<td>${v.toFixed(2)}</td>`);
+            html += `<td>${totalMass.toFixed(2)}</td><td style="color:var(--primary-dark); font-weight:bold;">${peiVol.toFixed(2)}</td></tr>`;
+            outputs[`组${g}`] = `DNA: ${totalMass.toFixed(2)} μg | PEI: ${peiVol.toFixed(2)} μL`;
         }
         html += `</tbody></table></div>`;
-        if (!hasData) {
-            html = '<div class="result-badge">请添加有效的组数据</div>';
-        }
+        html += `<div class="formula-line">公式：质粒体积 (μL) = (质量 μg × 1000) / 浓度(ng/μL)  |  PEI (μL) = 总DNA (μg) × PEI/DNA 比值</div>`;
         document.getElementById('transfectionResult').innerHTML = html;
+        debounceRecord("hist", () => { recordHistory('transfect', { "组数": currentGroupCount }, outputs, {
+            plasmid_count: document.getElementById('plasmid_count').value,
+            group_count: document.getElementById('group_count').value,
+            pei_ratio: document.getElementById('pei_ratio').value
+        }); });
     }
 
-    // ========= 5. 溶液配制 =========
-    function convertToUgPerMl(value, unit) {
-        switch(unit) {
-            case 'mg_per_ml': return value * 1000;
-            case 'ug_per_ml': return value;
-            case 'ug_per_ul': return value * 1000;
-            case 'ng_per_ul': return value;
-            default: return value;
-        }
+    // --- 5. 溶液配制 ---
+    function convertToUgPerMl(v, u) {
+        if (u === 'mg_per_ml' || u === 'ug_per_ul') return v * 1000;
+        return v;
     }
     function updateSolution() {
-        let stockVal = parseFloat(document.getElementById('stock_conc_val').value) || 0;
-        let stockUnit = document.getElementById('stock_conc_unit').value;
-        let targetConcVal = parseFloat(document.getElementById('target_conc_val').value) || 0;
-        let targetConcUnit = document.getElementById('target_conc_unit').value;
-        let targetVolVal = parseFloat(document.getElementById('target_vol_val').value) || 0;
-        let targetVolUnit = document.getElementById('target_vol_unit').value;
-        let stockConcUg = convertToUgPerMl(stockVal, stockUnit);
-        let targetConcUg = convertToUgPerMl(targetConcVal, targetConcUnit);
-        let targetVolUl = (targetVolUnit === 'ml') ? targetVolVal * 1000 : targetVolVal;
-        let requiredStockUl = (stockConcUg > 0) ? (targetVolUl * targetConcUg) / stockConcUg : 0;
-        let diluentVol = targetVolUl - requiredStockUl;
-        let diluentDisplay = (targetVolUnit === 'ml') ? diluentVol/1000 : diluentVol;
-        let unitDisplay = targetVolUnit === 'ml' ? 'mL' : 'μL';
+        let sVal = parseFloat(document.getElementById('stock_conc_val').value) || 0;
+        let sUnit = document.getElementById('stock_conc_unit').value;
+        let tConcVal = parseFloat(document.getElementById('target_conc_val').value) || 0;
+        let tConcUnit = document.getElementById('target_conc_unit').value;
+        let tVolVal = parseFloat(document.getElementById('target_vol_val').value) || 0;
+        let tVolUnit = document.getElementById('target_vol_unit').value;
+
+        let sUg = convertToUgPerMl(sVal, sUnit);
+        let tUg = convertToUgPerMl(tConcVal, tConcUnit);
+        let tVolUl = tVolUnit === 'ml' ? tVolVal * 1000 : tVolVal;
+
+        let reqStockUl = sUg > 0 ? (tVolUl * tUg) / sUg : 0;
+        let diluentUl = tVolUl - reqStockUl;
+
         document.getElementById('solutionResult').innerHTML = `
-            <div class="result-badge"><strong>母液</strong><span>${requiredStockUl.toFixed(2)} μL</span></div>
-            <div class="result-badge"><strong>稀释液</strong><span>${diluentDisplay.toFixed(2)} ${unitDisplay}</span></div>
-            <div class="note" style="width:100%;">换算: 母液浓度 ${stockVal} ${stockUnit} → ${stockConcUg.toFixed(2)} μg/mL &nbsp; 目的浓度 ${targetConcVal} ${targetConcUnit} → ${targetConcUg.toFixed(2)} μg/mL</div>
+            <div class="result-badge"><label>吸取母液体积</label><div class="val" style="color:var(--accent);">${reqStockUl.toFixed(2)} <span style="font-size:0.8rem">μL</span></div></div>
+            <div class="result-badge"><label>加入稀释液/溶剂</label><div class="val">${(tVolUnit === 'ml' ? diluentUl/1000 : diluentUl).toFixed(2)} <span style="font-size:0.8rem">${tVolUnit==='ml'?'mL':'μL'}</span></div></div>
+            <div class="formula-line">公式：C₁ × V₁ = C₂ × V₂  |  母液体积 = (目标浓度 × 目标体积) / 母液浓度</div>
         `;
+        debounceRecord("hist", () => { recordHistory('solution', { "母液": `${sVal} ${sUnit}` }, { "需母液": `${reqStockUl.toFixed(2)} μL` }, {
+            stock_conc_val: sVal, stock_conc_unit: sUnit,
+            target_conc_val: tConcVal, target_conc_unit: tConcUnit,
+            target_vol_val: tVolVal, target_vol_unit: tVolUnit
+        }); });
     }
 
-    // ========= 6. PCR =========
+    // --- 6. PCR 预混液 ---
     function updatePCR() {
-        let samples = parseFloat(document.getElementById('pcr_samples').value) || 0;
-        let sysVol = parseFloat(document.getElementById('pcr_sys').value) || 0;
+        let n = parseFloat(document.getElementById('pcr_samples').value) || 0;
+        let sys = parseFloat(document.getElementById('pcr_sys').value) || 0;
         let pol = parseFloat(document.getElementById('pcr_pol').value) || 0;
         let fwd = parseFloat(document.getElementById('pcr_fwd').value) || 0;
         let rev = parseFloat(document.getElementById('pcr_rev').value) || 0;
-        let totalPol = pol * samples;
-        let totalFwd = fwd * samples;
-        let totalRev = rev * samples;
-        let totalMix = totalPol + totalFwd + totalRev;
-        let totalSys = samples * sysVol;
-        let ddwater = totalSys - totalMix;
+        let tpl = parseFloat(document.getElementById('pcr_tpl').value) || 0;
+
+        let totPol = pol * n, totFwd = fwd * n, totRev = rev * n, totTpl = tpl * n;
+        let totSys = sys * n;
+        let water = totSys - (totPol + totFwd + totRev + totTpl);
+
         document.getElementById('pcrResult').innerHTML = `
-            <div class="result-badge"><strong>聚合酶</strong><span>${totalPol.toFixed(2)} μL</span></div>
-            <div class="result-badge"><strong>上游引物</strong><span>${totalFwd.toFixed(2)} μL</span></div>
-            <div class="result-badge"><strong>下游引物</strong><span>${totalRev.toFixed(2)} μL</span></div>
-            <div class="result-badge"><strong>ddH₂O</strong><span>${ddwater.toFixed(2)} μL</span></div>
-            <div class="result-badge"><strong>预混总体积</strong><span>${totalSys.toFixed(2)} μL</span></div>
+            <div class="result-badge"><label>聚合酶 / Master Mix</label><div class="val">${totPol.toFixed(1)} μL</div></div>
+            <div class="result-badge"><label>上 / 下游引物各</label><div class="val">${totFwd.toFixed(1)} / ${totRev.toFixed(1)} μL</div></div>
+            <div class="result-badge"><label>ddH₂O 补水总量</label><div class="val" style="color:var(--accent);">${water.toFixed(1)} μL</div></div>
+            <div class="result-badge"><label>Master Mix 总体积</label><div class="val">${totSys.toFixed(1)} μL</div></div>
+            <div class="formula-line">公式：各组分总量 = 单反应用量 × 样本数  |  ddH₂O = 总预混体积 − 各组分总和</div>
         `;
+        debounceRecord("hist", () => { recordHistory('pcr', { "样品数": n }, { "总体积": `${totSys} μL` }, {
+            pcr_samples: document.getElementById('pcr_samples').value,
+            pcr_sys: document.getElementById('pcr_sys').value,
+            pcr_pol: document.getElementById('pcr_pol').value,
+            pcr_fwd: document.getElementById('pcr_fwd').value,
+            pcr_rev: document.getElementById('pcr_rev').value,
+            pcr_tpl: document.getElementById('pcr_tpl').value
+        }); });
     }
 
-    // ========= 7. 滴度计算 =========
-    function toSciSup(num, digits=4) {
+    // --- 7. 滴度计算 & MOI ---
+    function toSciSup(num) {
         if (num === 0) return '0';
-        if (!isFinite(num)) return '∞';
         const exp = Math.floor(Math.log10(Math.abs(num)));
         const mant = num / Math.pow(10, exp);
-        return mant.toFixed(digits-1) + ' × 10<sup>' + exp + '</sup>';
+        return `${mant.toFixed(2)} × 10<sup>${exp}</sup>`;
     }
-    function formatVolume(vol) {
-        if (vol === 0) return '0';
-        if (!isFinite(vol)) return '∞';
-        const log10 = Math.log10(vol);
-        if (Math.abs(log10 - Math.round(log10)) < 1e-10) {
-            const exp = Math.round(log10);
-            return '10<sup>' + exp + '</sup>';
-        } else {
-            const exp = Math.floor(log10);
-            const mant = vol / Math.pow(10, exp);
-            return mant.toFixed(3) + '×10<sup>' + exp + '</sup>';
-        }
-    }
+
     function updateDilutionScheme() {
         const firstVol = parseFloat(document.getElementById('titer_first_vol').value) || 0;
         const rowCount = parseInt(document.getElementById('titer_row_select').value) || 1;
-        const container = document.getElementById('dilution_scheme');
-        if (rowCount < 1 || firstVol <= 0) {
-            container.innerHTML = '<p style="color:#5f7f9a; font-size:0.85rem;">请输入有效的第一排体积和排数</p>';
-            return;
-        }
-        let html = `<table class="scheme-table">
-            <thead><tr><th>排数</th><th>稀释倍数</th><th>病毒原液体积 (μL)</th></tr></thead><tbody>`;
+        let html = `<table class="lab-table"><thead><tr><th>排数</th><th>稀释倍数</th><th>原液体积</th></tr></thead><tbody>`;
         for (let i = 1; i <= rowCount; i++) {
-            const dilution = Math.pow(10, i - 1);
-            const vol = firstVol / dilution;
-            const volStr = formatVolume(vol);
-            html += `<tr><td>${i}</td><td>10<sup>${i-1}</sup></td><td>${volStr}</td></tr>`;
+            const vol = firstVol / Math.pow(10, i - 1);
+            const exp = Math.floor(Math.log10(vol));
+            const mant = vol / Math.pow(10, exp);
+            html += `<tr><td>第 ${i} 排</td><td>10<sup>${i-1}</sup> 倍</td><td>${mant.toFixed(3)} × 10<sup>${exp}</sup> μL</td></tr>`;
         }
         html += `</tbody></table>`;
-        container.innerHTML = html;
+        document.getElementById('dilution_scheme').innerHTML = html;
     }
+
     function updateTiter() {
         const firstVol = parseFloat(document.getElementById('titer_first_vol').value) || 0;
         const row = parseInt(document.getElementById('titer_row_select').value) || 1;
-        const fluoTotal = parseFloat(document.getElementById('titer_fluo_total').value) || 0;
+        const totalCount = parseFloat(document.getElementById('titer_fluo_total').value) || 0;
         const repeats = parseFloat(document.getElementById('titer_repeats').value) || 1;
-        const virusVol = firstVol / Math.pow(10, row - 1);
-        const avgCount = fluoTotal / repeats;
-        let titer = 0;
-        if (virusVol > 0) {
-            titer = (avgCount * 1000) / virusVol;
-        }
+
+        const vol = firstVol / Math.pow(10, row - 1);
+        const avg = totalCount / repeats;
+        const titer = vol > 0 ? (avg * 1000) / vol : 0;
+
         document.getElementById('titerResult').innerHTML = `
-            <div class="result-badge"><strong>第 ${row} 排病毒原液</strong><span>${virusVol.toFixed(4)} μL</span></div>
-            <div class="result-badge"><strong>平均病变/荧光/空斑数</strong><span>${avgCount.toFixed(2)} (总数 ${fluoTotal} / ${repeats} 重复)</span></div>
-            <div class="result-badge" style="background:#e6f0f9;"><strong>滴度</strong><span style="font-size:1.1rem; font-weight:700;">${toSciSup(titer)} TU/mL</span></div>
-            <div class="note" style="width:100%;">公式: 滴度 = (平均计数 × 1000) / 病毒原液量(μL) &nbsp; 科学计数法: ${titer.toFixed(4)} = ${toSciSup(titer)}</div>
+            <div class="result-badge"><label>平均空斑/荧光数</label><div class="val">${avg.toFixed(1)}</div></div>
+            <div class="result-badge"><label>计算滴度 (TU / mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(titer)}</div></div>
+            <div class="formula-line">公式：滴度 (TU/mL) = (平均阳性数 / 病毒原液体积 μL) × 1000</div>
         `;
+        debounceRecord("hist", () => { recordHistory('titer', { "选定排数": row }, { "滴度": `${titer.toExponential(2)} TU/mL` }, {
+            titer_first_vol: document.getElementById('titer_first_vol').value,
+            titer_row_select: document.getElementById('titer_row_select').value,
+            titer_fluo_total: document.getElementById('titer_fluo_total').value,
+            titer_repeats: document.getElementById('titer_repeats').value
+        }); });
     }
 
-    // ========= 8. MOI 计算 =========
     function updateMOI() {
-        let cellCount = parseFloat(document.getElementById('moi_cell_count').value) || 1;
-        let moi = parseFloat(document.getElementById('moi_value').value) || 1;
-        let titer6 = parseFloat(document.getElementById('moi_titer').value) || 1;
-        let actualCells = cellCount * 1e5;
-        let titer = titer6 * 1e6;
-        let virusVol = (actualCells * moi) / titer * 1000;
+        let cells = (parseFloat(document.getElementById('moi_cell_count').value) || 0) * 1e5;
+        let moi = parseFloat(document.getElementById('moi_value').value) || 0;
+        let titer = (parseFloat(document.getElementById('moi_titer').value) || 0) * 1e6;
+
+        let reqVol = titer > 0 ? (cells * moi / titer) * 1000 : 0;
         document.getElementById('moiResult').innerHTML = `
-            <div class="result-badge"><strong>所需病毒体积</strong><span>${virusVol.toFixed(2)} μL</span></div>
-            <div class="result-badge"><strong>实际细胞数</strong><span>${toSciSup(actualCells)}</span></div>
-            <div class="result-badge"><strong>MOI</strong><span>${moi}</span></div>
-            <div class="result-badge"><strong>滴度</strong><span>${toSciSup(titer)} TU/mL</span></div>
-            <div class="note" style="width:100%;">公式: 病毒体积(μL) = (细胞数 × MOI) / 滴度 × 1000 &nbsp; 输入滴度单位: 10⁶ TU/mL</div>
+            <div class="result-badge"><label>需加病毒原液体积</label><div class="val" style="color:var(--accent);">${reqVol.toFixed(2)} <span style="font-size:0.8rem">μL</span></div></div>
+            <div class="formula-line">公式：病毒体积 (μL) = (细胞数 × MOI / 病毒滴度) × 1000</div>
         `;
+        debounceRecord("hist", () => { recordHistory('moi', { "MOI": moi }, { "病毒量": `${reqVol.toFixed(2)} μL` }, {
+            moi_cell_count: document.getElementById('moi_cell_count').value,
+            moi_value: document.getElementById('moi_value').value,
+            moi_titer: document.getElementById('moi_titer').value
+        }); });
     }
 
-    // ========= 事件绑定 =========
-    function bindAll() {
-        // 细胞计数
-        ['cell_total','cell_dilution','cell_vol','cell_target_conc','cell_need','cell_mode'].forEach(id => {
+    // --- 全局事件绑定与初始化 ---
+    function init() {
+        // 绑定输入联动
+        const bindInputs = (ids, fn) => ids.forEach(id => {
             const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', updateCellCalc);
-                if (el.tagName === 'SELECT') el.addEventListener('change', updateCellCalc);
+            if (el) el.addEventListener('input', fn);
+        });
+        const bindSelects = (ids, fn) => ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', fn);
+        });
+
+        bindInputs(['cell_total','cell_dilution','cell_vol','cell_target_conc','cell_need'], updateCellCalc);
+        bindSelects(['cell_mode'], updateCellCalc);
+        bindInputs(['hr_vector_bp','hr_vector_conc','hr_vector_mass'], updateMultiFragment);
+        document.getElementById('fragment_count').addEventListener('change', renderFragments);
+
+        bindInputs(['area_per_well','med_per_well','flask_area','flask_confluence','target_wells','seed_confluence','resuspend_vol'], updatePlating);
+        document.getElementById('plate_type').addEventListener('change', (e) => {
+            const map = {6:[9.6,2], 12:[3.8,1], 24:[1.9,0.5], 48:[0.7,0.2], 96:[0.3,0.1], "10cm":[55,10]};
+            const val = map[e.target.value];
+            if (val) {
+                document.getElementById('area_per_well').value = val[0];
+                document.getElementById('med_per_well').value = val[1];
+                updatePlating();
             }
         });
-        // 重组
-        document.getElementById('hr_vector_bp').addEventListener('input', updateMultiFragment);
-        document.getElementById('hr_vector_conc').addEventListener('input', updateMultiFragment);
-        document.getElementById('hr_vector_mass').addEventListener('input', updateMultiFragment);
-        document.getElementById('fragment_count').addEventListener('change', renderFragments);
-        // 铺板
-        ['plate_type','area_per_well','med_per_well','flask_area','flask_confluence','target_wells','seed_confluence','resuspend_vol'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('input', updatePlating);
-        });
-        document.getElementById('plate_type').addEventListener('change', updatePlating);
-        // 转染
+
         document.getElementById('plasmid_count').addEventListener('change', renderTransfectionGroups);
         document.getElementById('group_count').addEventListener('change', renderTransfectionGroups);
         document.getElementById('pei_ratio').addEventListener('input', updateTransfection);
-        // 溶液
-        ['stock_conc_val','stock_conc_unit','target_conc_val','target_conc_unit','target_vol_val','target_vol_unit'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', updateSolution);
-                if (el.tagName === 'SELECT') el.addEventListener('change', updateSolution);
-            }
+
+        bindInputs(['stock_conc_val','target_conc_val','target_vol_val'], updateSolution);
+        bindSelects(['stock_conc_unit','target_conc_unit','target_vol_unit'], updateSolution);
+        bindInputs(['pcr_samples','pcr_sys','pcr_pol','pcr_fwd','pcr_rev','pcr_tpl'], updatePCR);
+
+        bindInputs(['titer_first_vol','titer_fluo_total','titer_repeats'], () => {
+            updateDilutionScheme(); updateTiter();
         });
-        // PCR
-        ['pcr_samples','pcr_sys','pcr_pol','pcr_fwd','pcr_rev'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updatePCR);
+        bindSelects(['titer_row_select'], () => { updateDilutionScheme(); updateTiter(); });
+        bindInputs(['moi_cell_count','moi_value','moi_titer'], updateMOI);
+
+        // 历史记录弹窗控制
+        document.getElementById('btn-open-history').addEventListener('click', () => {
+            renderModalHistory();
+            document.getElementById('historyModal').style.display = 'flex';
         });
-        // 滴度
-        ['titer_first_vol','titer_row_select','titer_fluo_total','titer_repeats'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', () => { updateDilutionScheme(); updateTiter(); });
-                if (el.tagName === 'SELECT') el.addEventListener('change', () => { updateDilutionScheme(); updateTiter(); });
-            }
+        document.getElementById('btn-close-history').addEventListener('click', () => {
+            document.getElementById('historyModal').style.display = 'none';
         });
-        // MOI
-        ['moi_cell_count','moi_value','moi_titer'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updateMOI);
+        document.getElementById('btn-clear-history').addEventListener('click', () => {
+            localStorage.removeItem('labsuite_history');
+            localStorage.removeItem('labsuite_last_inputs');
+            renderModalHistory();
         });
-        // 初始化
+
+        // 恢复上次输入值 (所有模块)
+        ['cell','recomb','plating','transfect','solution','pcr','titer'].forEach(k => restoreLastInputs(k));
+        // 首次初始化运行
         updateCellCalc();
         renderFragments();
         updatePlating();
@@ -878,7 +1215,8 @@
         updateTiter();
         updateMOI();
     }
-    bindAll();
+
+    window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
