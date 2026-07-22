@@ -761,7 +761,7 @@
         if (_skipRecord) return;
         clearTimeout(debounceTimers[key]);
         clearTimeout(debounceTimers[key]);
-        debounceTimers[key] = setTimeout(fn, 1200);
+        debounceTimers[key] = setTimeout(fn, 3000);
     }
 
     // --- 1. 细胞计数 ---
@@ -845,7 +845,7 @@
         }
 
         document.getElementById('cellResult').innerHTML = html;
-        debounceRecord("hist", () => { recordHistory('cell', inputs, outputs, {
+        debounceRecord("cell", () => { recordHistory('cell', inputs, outputs, {
             cell_total: total, cell_dilution: dilution, cell_vol: curVol, cell_mode: mode,
             cell_target_conc: document.getElementById('cell_target_conc').value,
             cell_need: document.getElementById('cell_need').value,
@@ -902,7 +902,7 @@
         }
 
         document.getElementById('multiFragmentResult').innerHTML = html;
-        debounceRecord("hist", () => { recordHistory('recomb', inputs, outputs, {
+        debounceRecord("recomb", () => { recordHistory('recomb', inputs, outputs, {
             hr_vector_bp: document.getElementById('hr_vector_bp').value,
             hr_vector_conc: document.getElementById('hr_vector_conc').value,
             hr_vector_mass: document.getElementById('hr_vector_mass').value,
@@ -932,7 +932,7 @@
             <div class="result-badge"><label>每孔需补充培养基</label><div class="val" style="color:var(--accent);">${singleMedVol.toFixed(1)} <span style="font-size:0.8rem">μL</span></div></div>
             <div class="formula-line">公式：悬液 (μL) = (孔数 × 孔面积 × 接种率%) / (瓶面积 × 瓶汇合率%) × 重悬体积 × 1000</div>
         `;
-        debounceRecord("hist", () => { recordHistory('plating', { "目标孔数": wells }, { "总悬液": `${reqVolUl.toFixed(1)} μL` }, {
+        debounceRecord("plating", () => { recordHistory('plating', { "目标孔数": wells }, { "总悬液": `${reqVolUl.toFixed(1)} μL` }, {
             plate_type: document.getElementById('plate_type').value,
             area_per_well: document.getElementById('area_per_well').value,
             med_per_well: document.getElementById('med_per_well').value,
@@ -1002,7 +1002,7 @@
         html += `</tbody></table></div>`;
         html += `<div class="formula-line">公式：质粒体积 (μL) = (质量 μg × 1000) / 浓度(ng/μL)  |  PEI (μL) = 总DNA (μg) × PEI/DNA 比值</div>`;
         document.getElementById('transfectionResult').innerHTML = html;
-        debounceRecord("hist", () => { recordHistory('transfect', { "组数": currentGroupCount }, outputs, {
+        debounceRecord("transfect", () => { recordHistory('transfect', { "组数": currentGroupCount }, outputs, {
             plasmid_count: document.getElementById('plasmid_count').value,
             group_count: document.getElementById('group_count').value,
             pei_ratio: document.getElementById('pei_ratio').value
@@ -1034,7 +1034,7 @@
             <div class="result-badge"><label>加入稀释液/溶剂</label><div class="val">${(tVolUnit === 'ml' ? diluentUl/1000 : diluentUl).toFixed(2)} <span style="font-size:0.8rem">${tVolUnit==='ml'?'mL':'μL'}</span></div></div>
             <div class="formula-line">公式：C₁ × V₁ = C₂ × V₂  |  母液体积 = (目标浓度 × 目标体积) / 母液浓度</div>
         `;
-        debounceRecord("hist", () => { recordHistory('solution', { "母液": `${sVal} ${sUnit}` }, { "需母液": `${reqStockUl.toFixed(2)} μL` }, {
+        debounceRecord("solution", () => { recordHistory('solution', { "母液": `${sVal} ${sUnit}` }, { "需母液": `${reqStockUl.toFixed(2)} μL` }, {
             stock_conc_val: sVal, stock_conc_unit: sUnit,
             target_conc_val: tConcVal, target_conc_unit: tConcUnit,
             target_vol_val: tVolVal, target_vol_unit: tVolUnit
@@ -1061,7 +1061,7 @@
             <div class="result-badge"><label>Master Mix 总体积</label><div class="val">${totSys.toFixed(1)} μL</div></div>
             <div class="formula-line">公式：各组分总量 = 单反应用量 × 样本数  |  ddH₂O = 总预混体积 − 各组分总和</div>
         `;
-        debounceRecord("hist", () => { recordHistory('pcr', { "样品数": n }, { "总体积": `${totSys} μL` }, {
+        debounceRecord("pcr", () => { recordHistory('pcr', { "样品数": n }, { "总体积": `${totSys} μL` }, {
             pcr_samples: document.getElementById('pcr_samples').value,
             pcr_sys: document.getElementById('pcr_sys').value,
             pcr_pol: document.getElementById('pcr_pol').value,
@@ -1108,7 +1108,7 @@
             <div class="result-badge"><label>计算滴度 (TU / mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(titer)}</div></div>
             <div class="formula-line">公式：滴度 (TU/mL) = (平均阳性数 / 病毒原液体积 μL) × 1000</div>
         `;
-        debounceRecord("hist", () => { recordHistory('titer', { "选定排数": row }, { "滴度": `${titer.toExponential(2)} TU/mL` }, {
+        debounceRecord("titer", () => { recordHistory('titer', { "选定排数": row }, { "滴度": `${titer.toExponential(2)} TU/mL` }, {
             titer_first_vol: document.getElementById('titer_first_vol').value,
             titer_row_select: document.getElementById('titer_row_select').value,
             titer_fluo_total: document.getElementById('titer_fluo_total').value,
@@ -1126,7 +1126,7 @@
             <div class="result-badge"><label>需加病毒原液体积</label><div class="val" style="color:var(--accent);">${reqVol.toFixed(2)} <span style="font-size:0.8rem">μL</span></div></div>
             <div class="formula-line">公式：病毒体积 (μL) = (细胞数 × MOI / 病毒滴度) × 1000</div>
         `;
-        debounceRecord("hist", () => { recordHistory('moi', { "MOI": moi }, { "病毒量": `${reqVol.toFixed(2)} μL` }, {
+        debounceRecord("moi", () => { recordHistory('moi', { "MOI": moi }, { "病毒量": `${reqVol.toFixed(2)} μL` }, {
             moi_cell_count: document.getElementById('moi_cell_count').value,
             moi_value: document.getElementById('moi_value').value,
             moi_titer: document.getElementById('moi_titer').value
@@ -1192,7 +1192,7 @@
         });
 
         // 加载上次输入值
-        ['cell','recomb','plating','transfect','solution','pcr','titer'].forEach(k => loadInputs(k));
+        ['cell','recomb','plating','transfect','solution','pcr','titer','moi'].forEach(k => loadInputs(k));
         // 首次初始化运行（不记录历史）
         _skipRecord = true;
         updateCellCalc();
@@ -1204,7 +1204,7 @@
         updateDilutionScheme();
         updateTiter();
         updateMOI();
-        clearTimeout(debounceTimers["hist"]);
+        clearTimeout(debounceTimers["cell"]);
         setTimeout(() => { _skipRecord = false; }, 500);
     }
 
