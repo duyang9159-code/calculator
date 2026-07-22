@@ -637,10 +637,10 @@
         transfect: '转染体系', solution: '溶液配制', pcr: 'PCR 预混液',
         titer: '滴度计算', moi: 'MOI 计算'
     };
-    let historyRecords = [];  // 仅内存，不持久化
+    let historyRecords = JSON.parse(localStorage.getItem('labsuite_history') || '[]');
 
     function recordHistory(key, inputsObj, outputsObj, fieldsObj) {
-        saveInputs(key, fieldsObj);  // 记住当前输入
+        saveInputs(key, fieldsObj);
         const now = new Date();
         historyRecords.unshift({
             moduleName: MODULE_NAMES[key] || key,
@@ -651,6 +651,7 @@
             fields: fieldsObj || {}
         });
         if (historyRecords.length > 10) historyRecords = historyRecords.slice(0, 10);
+        localStorage.setItem('labsuite_history', JSON.stringify(historyRecords));
     }
 
     function restoreHistory(moduleKey, fields) {
@@ -738,9 +739,12 @@
         });
     });
 
-    // --- 输入记忆（仅内存） ---
-    let lastInputs = {};
-    function saveInputs(key, fieldsObj) { lastInputs[key] = fieldsObj || {}; }
+    // --- 输入记忆（持久化） ---
+    let lastInputs = JSON.parse(localStorage.getItem('labsuite_inputs') || '{}');
+    function saveInputs(key, fieldsObj) {
+        lastInputs[key] = fieldsObj || {};
+        localStorage.setItem('labsuite_inputs', JSON.stringify(lastInputs));
+    }
     function loadInputs(key) {
         const fields = lastInputs[key];
         if (!fields) return;
@@ -1181,10 +1185,16 @@
         });
         document.getElementById('btn-clear-history').addEventListener('click', () => {
             historyRecords = [];
+            lastInputs = {};
+            localStorage.removeItem('labsuite_history');
+            localStorage.removeItem('labsuite_inputs');
             renderModalHistory();
         });
 
-        // 首次初始化运行
+        // 加载上次输入值
+        ['cell','recomb','plating','transfect','solution','pcr','titer'].forEach(k => loadInputs(k));
+        // 首次初始化运行（不记录历史）
+        _skipRecord = true;
         updateCellCalc();
         renderFragments();
         updatePlating();
@@ -1194,7 +1204,8 @@
         updateDilutionScheme();
         updateTiter();
         updateMOI();
-        initializing = false;  // 初始化完成，之后用户操作才记录
+        clearTimeout(debounceTimers["hist"]);
+        setTimeout(() => { _skipRecord = false; }, 500);
     }
 
     window.addEventListener('DOMContentLoaded', init);
