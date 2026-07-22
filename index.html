@@ -631,47 +631,26 @@
 </div>
 
 <script>
-    // --- 历史记录存储 ---
+    // --- 历史记录存储（仅内存，每次打开页面清空） ---
     const MODULE_NAMES = {
         cell: '细胞计数', recomb: '多片段重组', plating: '铺板计算',
         transfect: '转染体系', solution: '溶液配制', pcr: 'PCR 预混液',
         titer: '滴度计算', moi: 'MOI 计算'
     };
+    let historyRecords = [];  // 仅内存，不持久化
 
     function recordHistory(key, inputsObj, outputsObj, fieldsObj) {
-        let records = JSON.parse(localStorage.getItem('labsuite_history') || '[]');
-        if (!Array.isArray(records)) records = [];
+        saveInputs(key, fieldsObj);  // 记住当前输入
         const now = new Date();
-        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        records.unshift({
+        historyRecords.unshift({
             moduleName: MODULE_NAMES[key] || key,
             moduleKey: key,
-            time: time,
-            stamp: now.getTime(),
+            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             inputs: inputsObj,
             outputs: outputsObj,
             fields: fieldsObj || {}
         });
-        if (records.length > 10) records = records.slice(0, 10);
-        localStorage.setItem('labsuite_history', JSON.stringify(records));
-        // Also save inputs for persistence
-        saveLastInputs(key, fieldsObj);
-    }
-
-    function saveLastInputs(key, fieldsObj) {
-        let last = JSON.parse(localStorage.getItem('labsuite_last_inputs') || '{}');
-        last[key] = fieldsObj || {};
-        localStorage.setItem('labsuite_last_inputs', JSON.stringify(last));
-    }
-
-    function restoreLastInputs(key) {
-        let last = JSON.parse(localStorage.getItem('labsuite_last_inputs') || '{}');
-        const fields = last[key];
-        if (!fields) return;
-        Object.entries(fields).forEach(([id, val]) => {
-            const el = document.getElementById(id);
-            if (el) { el.value = val; }
-        });
+        if (historyRecords.length > 10) historyRecords = historyRecords.slice(0, 10);
     }
 
     function restoreHistory(moduleKey, fields) {
@@ -705,20 +684,15 @@
     }
 
     function renderModalHistory() {
-        let records = JSON.parse(localStorage.getItem('labsuite_history') || '[]');
-        // Migrate old object-format history to array
-        if (!Array.isArray(records)) {
-            records = Object.values(records).sort((a,b) => (b.stamp||0) - (a.stamp||0)).slice(0,10);
-        }
         const container = document.getElementById('modalHistoryList');
 
-        if (records.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:30px 0;">暂无记录（最近十条）</div>';
+        if (historyRecords.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:30px 0;">暂无记录</div>';
             return;
         }
 
         let html = '';
-        records.forEach(item => {
+        historyRecords.forEach(item => {
             html += `
                 <div class="hist-card" onclick="restoreHistory('${item.moduleKey}', ${JSON.stringify(item.fields || {}).replace(/"/g, '&quot;')})" title="点击恢复此记录">
                     <div class="hist-header">
@@ -752,19 +726,36 @@
             panes.forEach(p => p.classList.remove('active-pane'));
             document.getElementById(`module-${mod}`).classList.add('active-pane');
 
-            // 恢复上次输入值
-            restoreLastInputs(mod);
+            // 加载上次输入，切换时不记录
+            loadInputs(mod);
+            _skipRecord = true;
             // 模块切换重绘触发
             if (mod === 'transfect') renderTransfectionGroups();
             if (mod === 'recomb') renderFragments();
             if (mod === 'cell') updateCellCalc();
             if (mod === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
+            setTimeout(() => { _skipRecord = false; }, 100);
         });
     });
 
+    // --- 输入记忆（仅内存） ---
+    let lastInputs = {};
+    function saveInputs(key, fieldsObj) { lastInputs[key] = fieldsObj || {}; }
+    function loadInputs(key) {
+        const fields = lastInputs[key];
+        if (!fields) return;
+        Object.entries(fields).forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        });
+    }
+
     // --- 防抖：输完才记录历史 ---
+    let _skipRecord = false;
     const debounceTimers = {};
     function debounceRecord(key, fn) {
+        if (_skipRecord) return;
+        clearTimeout(debounceTimers[key]);
         clearTimeout(debounceTimers[key]);
         debounceTimers[key] = setTimeout(fn, 1200);
     }
@@ -1189,13 +1180,10 @@
             document.getElementById('historyModal').style.display = 'none';
         });
         document.getElementById('btn-clear-history').addEventListener('click', () => {
-            localStorage.removeItem('labsuite_history');
-            localStorage.removeItem('labsuite_last_inputs');
+            historyRecords = [];
             renderModalHistory();
         });
 
-        // 恢复上次输入值 (所有模块)
-        ['cell','recomb','plating','transfect','solution','pcr','titer'].forEach(k => restoreLastInputs(k));
         // 首次初始化运行
         updateCellCalc();
         renderFragments();
@@ -1206,6 +1194,7 @@
         updateDilutionScheme();
         updateTiter();
         updateMOI();
+        initializing = false;  // 初始化完成，之后用户操作才记录
     }
 
     window.addEventListener('DOMContentLoaded', init);
