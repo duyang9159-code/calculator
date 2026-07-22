@@ -333,6 +333,15 @@
             line-height: 1.6;
         }
 
+        /* 子标签 */
+        .sub-tabs { display: flex; gap: 6px; }
+        .sub-tab {
+            background: #fff; border: 2px solid #c5d5c5; padding: 8px 22px; border-radius: 22px;
+            font-size: 0.85rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: .15s;
+        }
+        .sub-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .sub-tab:hover:not(.active) { border-color: var(--primary); color: var(--primary-dark); }
+
         .hidden-input { display: none !important; }
 
         @media (max-width: 640px) {
@@ -510,37 +519,43 @@
 
     <!-- 模块 7: 滴度计算 & MOI -->
     <div id="module-titer" class="module-pane">
-        <div class="section-title">病毒滴度与 MOI 计算</div>
-        <div class="input-grid">
-            <div class="input-field"><label>首孔病毒体积（μL）</label><input type="number" id="titer_first_vol" value="10"></div>
-            <div class="input-field"><label>计算目标排数 (10倍梯度稀释)</label>
-                <select id="titer_row_select">
-                    <option value="1">第 1 排 (10⁰)</option>
-                    <option value="2">第 2 排 (10¹)</option>
-                    <option value="3">第 3 排 (10²)</option>
-                    <option value="4">第 4 排 (10³)</option>
-                    <option value="5" selected>第 5 排 (10⁴)</option>
-                    <option value="6">第 6 排 (10⁵)</option>
-                    <option value="7">第 7 排 (10⁶)</option>
-                </select>
+        <div class="section-title">
+            <span>病毒滴度与 MOI 计算</span>
+            <div class="sub-tabs">
+                <button class="sub-tab active" data-sub="titer">滴度计算</button>
+                <button class="sub-tab" data-sub="moi">MOI 计算</button>
             </div>
-            <div class="input-field"><label>该排病变/阳性数总和</label><input type="number" id="titer_fluo_total" value="21"></div>
-            <div class="input-field"><label>复孔/重复组数</label><input type="number" id="titer_repeats" value="3" min="1"></div>
         </div>
 
-        <div style="margin: 16px 0;">
-            <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">梯度稀释预览</p>
-            <div class="table-wrapper"><div id="dilution_scheme"></div></div>
-        </div>
-
-        <div class="result-panel" id="titerResult"></div>
-
-        <div style="margin-top: 28px; border-top: 1px dashed var(--border-color); padding-top: 20px;">
-            <div class="section-title" style="font-size: 1rem;">MOI 感染所需病毒量换算</div>
+        <div id="titer-sub-titer">
             <div class="input-grid">
-                <div class="input-field"><label>待感染细胞数（cells）</label><input type="number" id="moi_cell_count" value="10"></div>
+                <div class="input-field"><label>首孔病毒体积（μL）</label><input type="number" id="titer_first_vol" value="10"></div>
+                <div class="input-field"><label>计算目标排数 (10倍梯度稀释)</label>
+                    <select id="titer_row_select">
+                        <option value="1">第 1 排 (10⁰)</option>
+                        <option value="2">第 2 排 (10¹)</option>
+                        <option value="3">第 3 排 (10²)</option>
+                        <option value="4">第 4 排 (10³)</option>
+                        <option value="5" selected>第 5 排 (10⁴)</option>
+                        <option value="6">第 6 排 (10⁵)</option>
+                        <option value="7">第 7 排 (10⁶)</option>
+                    </select>
+                </div>
+                <div class="input-field"><label>该排病变/阳性数总和</label><input type="number" id="titer_fluo_total" value="21"></div>
+                <div class="input-field"><label>复孔/重复组数</label><input type="number" id="titer_repeats" value="3" min="1"></div>
+            </div>
+            <div style="margin: 16px 0;">
+                <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">梯度稀释预览</p>
+                <div class="table-wrapper"><div id="dilution_scheme"></div></div>
+            </div>
+            <div class="result-panel" id="titerResult"></div>
+        </div>
+
+        <div id="titer-sub-moi" class="hidden-input">
+            <div class="input-grid">
+                <div class="input-field"><label>待感染细胞数（×10⁵ cells）</label><input type="number" id="moi_cell_count" value="10"></div>
                 <div class="input-field"><label>目标 MOI</label><input type="number" id="moi_value" value="10"></div>
-                <div class="input-field"><label>病毒滴度（TU/mL）</label><input type="number" id="moi_titer" value="100"></div>
+                <div class="input-field"><label>病毒滴度（10⁶ TU/mL）</label><input type="number" id="moi_titer" value="100"></div>
             </div>
             <div class="result-panel" id="moiResult"></div>
         </div>
@@ -704,6 +719,7 @@
                         <div><strong>输入：</strong> ${formatObj(item.inputs)}</div>
                         <div style="color:var(--primary-dark); margin-top:4px;"><strong>结果：</strong> ${formatObj(item.outputs)}</div>
                     </div>
+                    <div style="font-size:0.72rem; color:var(--accent); margin-top:6px; text-align:right;">点击查看详情 &rarr;</div>
                 </div>
             `;
         });
@@ -714,6 +730,23 @@
         if (!obj) return '-';
         return Object.entries(obj).map(([k, v]) => `${k}: ${v}`).join(' | ');
     }
+
+    // --- 子标签切换 ---
+    document.querySelectorAll('.sub-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sub = btn.dataset.sub;
+            btn.parentElement.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('titer-sub-titer').classList.toggle('hidden-input', sub !== 'titer');
+            document.getElementById('titer-sub-moi').classList.toggle('hidden-input', sub !== 'moi');
+            _skipRecord = true;
+            if (sub === 'titer') { updateDilutionScheme(); updateTiter(); }
+            if (sub === 'moi') updateMOI();
+            clearTimeout(debounceTimers["titer"]);
+            clearTimeout(debounceTimers["moi"]);
+            setTimeout(() => { _skipRecord = false; }, 200);
+        });
+    });
 
     // --- Tab 切换逻辑 ---
     const tabs = document.querySelectorAll('.tab-btn');
@@ -1108,7 +1141,7 @@
             <div class="result-badge"><label>计算滴度 (TU / mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(titer)}</div></div>
             <div class="formula-line">公式：滴度 (TU/mL) = (平均阳性数 / 病毒原液体积 μL) × 1000</div>
         `;
-        debounceRecord("titer", () => { recordHistory('titer', { "选定排数": row }, { "滴度": `${titer.toExponential(2)} TU/mL` }, {
+        debounceRecord("titer", () => { recordHistory('titer', { "首孔体积": `${document.getElementById('titer_first_vol').value} μL`, "排数": `第${row}排`, "阳性总数": totalCount, "复孔": repeats }, { "滴度": `${toSciSup(titer)} TU/mL` }, {
             titer_first_vol: document.getElementById('titer_first_vol').value,
             titer_row_select: document.getElementById('titer_row_select').value,
             titer_fluo_total: document.getElementById('titer_fluo_total').value,
@@ -1126,7 +1159,7 @@
             <div class="result-badge"><label>需加病毒原液体积</label><div class="val" style="color:var(--accent);">${reqVol.toFixed(2)} <span style="font-size:0.8rem">μL</span></div></div>
             <div class="formula-line">公式：病毒体积 (μL) = (细胞数 × MOI / 病毒滴度) × 1000</div>
         `;
-        debounceRecord("moi", () => { recordHistory('moi', { "MOI": moi }, { "病毒量": `${reqVol.toFixed(2)} μL` }, {
+        debounceRecord("moi", () => { recordHistory('moi', { "细胞数": `${document.getElementById('moi_cell_count').value}×10⁵`, "MOI": moi, "滴度": `${document.getElementById('moi_titer').value}×10⁶ TU/mL` }, { "需病毒量": `${reqVol.toFixed(2)} μL` }, {
             moi_cell_count: document.getElementById('moi_cell_count').value,
             moi_value: document.getElementById('moi_value').value,
             moi_titer: document.getElementById('moi_titer').value
