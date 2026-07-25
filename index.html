@@ -342,6 +342,13 @@
         .sub-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         .sub-tab:hover:not(.active) { border-color: var(--primary); color: var(--primary-dark); }
 
+        .calc-btn {
+            background: #fff; border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 14px 0; font-size: 1.05rem; cursor: pointer; transition: .1s; text-align: center;
+        }
+        .calc-btn:hover { background: #eef2ee; }
+        .calc-btn:active { background: #d8e5d8; }
+
         .hidden-input { display: none !important; }
 
         @media (max-width: 640px) {
@@ -367,6 +374,7 @@
         <button class="tab-btn" data-module="pcr">PCR 预混液</button>
         <button class="tab-btn" data-module="titer">滴度与 MOI</button>
         <button class="tab-btn" data-module="guide">使用说明</button>
+        <button class="history-toggle-btn" id="btn-open-calc" style="margin-right:6px;">计算器</button>
         <button class="history-toggle-btn" id="btn-open-history">最近记录</button>
     </div>
 
@@ -386,12 +394,12 @@
                     <option value="known">已知浓度</option>
                 </select>
             </div>
+            <div class="input-field hidden-input" id="cell_known_conc_field"><label>已知细胞浓度（×10⁶ cells/mL）</label><input type="number" id="cell_known_conc" value="2" min="0" step="0.1"></div>
             <div class="input-field" id="cell_target_conc_field"><label>目标细胞浓度（×10⁶ cells/mL）</label><input type="number" id="cell_target_conc" value="1" min="0" step="0.1"></div>
             <div class="input-field hidden-input" id="cell_need_field"><label>需要细胞数（×10⁶ cells）</label><input type="number" id="cell_need" value="10" min="0" step="0.5"></div>
-            <div class="input-field hidden-input" id="cell_known_conc_field"><label>已知细胞浓度（×10⁶ cells/mL）</label><input type="number" id="cell_known_conc" value="2" min="0" step="0.1"></div>
         </div>
         <div class="result-panel" id="cellResult"></div>
-        <div class="note">计算公式：细胞浓度 (10⁶ 个/mL) = (4大格总数 / 4) × 10⁴ × 稀释倍数 / 10⁶</div>
+        <div class="note" id="cellNote">计算公式：细胞浓度 (10⁶ 个/mL) = (4大格总数 / 4) × 10⁴ × 稀释倍数 / 10⁶</div>
     </div>
 
     <!-- 模块 2: 多片段重组 -->
@@ -463,44 +471,71 @@
 
     <!-- 模块 5: 溶液配制 -->
     <div id="module-solution" class="module-pane">
-        <div class="section-title">母液稀释与溶液配制 (C₁V₁ = C₂V₂)</div>
-        <div class="input-grid">
-            <div class="input-field">
-                <label>母液浓度（单位）</label>
-                <div style="display:flex; gap:6px;">
-                    <input type="number" id="stock_conc_val" value="10" style="flex:2;">
-                    <select id="stock_conc_unit" style="flex:1;">
-                        <option value="mg_per_ml">mg/mL</option>
-                        <option value="ug_per_ml">μg/mL</option>
-                        <option value="ug_per_ul">μg/μL</option>
-                        <option value="ng_per_ul">ng/μL</option>
-                    </select>
-                </div>
-            </div>
-            <div class="input-field">
-                <label>目标浓度（单位）</label>
-                <div style="display:flex; gap:6px;">
-                    <input type="number" id="target_conc_val" value="8" style="flex:2;">
-                    <select id="target_conc_unit" style="flex:1;">
-                        <option value="ug_per_ml">μg/mL</option>
-                        <option value="mg_per_ml">mg/mL</option>
-                        <option value="ug_per_ul">μg/μL</option>
-                        <option value="ng_per_ul">ng/μL</option>
-                    </select>
-                </div>
-            </div>
-            <div class="input-field">
-                <label>目标最终体积（单位）</label>
-                <div style="display:flex; gap:6px;">
-                    <input type="number" id="target_vol_val" value="50" style="flex:2;">
-                    <select id="target_vol_unit" style="flex:1;">
-                        <option value="ml">mL</option>
-                        <option value="ul">μL</option>
-                    </select>
-                </div>
+        <div class="section-title">
+            <span>溶液配制</span>
+            <div class="sub-tabs">
+                <button class="sub-tab active" data-solsub="conc">浓度稀释</button>
+                <button class="sub-tab" data-solsub="fold">倍数稀释</button>
             </div>
         </div>
-        <div class="result-panel" id="solutionResult"></div>
+
+        <div id="sol-sub-conc">
+            <div class="input-grid">
+                <div class="input-field">
+                    <label>母液浓度（单位）</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="number" id="stock_conc_val" value="10" style="flex:2;">
+                        <select id="stock_conc_unit" style="flex:1;">
+                            <option value="mg_per_ml">mg/mL</option>
+                            <option value="ug_per_ml">μg/mL</option>
+                            <option value="ug_per_ul">μg/μL</option>
+                            <option value="ng_per_ul">ng/μL</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-field">
+                    <label>目标浓度（单位）</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="number" id="target_conc_val" value="8" style="flex:2;">
+                        <select id="target_conc_unit" style="flex:1;">
+                            <option value="ug_per_ml">μg/mL</option>
+                            <option value="mg_per_ml">mg/mL</option>
+                            <option value="ug_per_ul">μg/μL</option>
+                            <option value="ng_per_ul">ng/μL</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-field">
+                    <label>目标最终体积（单位）</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="number" id="target_vol_val" value="50" style="flex:2;">
+                        <select id="target_vol_unit" style="flex:1;">
+                            <option value="ml">mL</option>
+                            <option value="ul">μL</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="result-panel" id="solutionResult"></div>
+        </div>
+
+        <div id="sol-sub-fold" class="hidden-input">
+            <div class="input-grid">
+                <div class="input-field"><label>母液倍数（×）</label><input type="number" id="fold_stock" value="5" step="0.5"></div>
+                <div class="input-field"><label>目标倍数（×）</label><input type="number" id="fold_target" value="1" step="0.5"></div>
+                <div class="input-field">
+                    <label>体系总体积（单位）</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="number" id="fold_vol_val" value="100" style="flex:2;">
+                        <select id="fold_vol_unit" style="flex:1;">
+                            <option value="ml">mL</option>
+                            <option value="ul">μL</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="result-panel" id="foldResult"></div>
+        </div>
     </div>
 
     <!-- 模块 6: PCR 预混液 -->
@@ -645,6 +680,40 @@
     </div>
 </div>
 
+<!-- 简易计算器弹窗 -->
+<div class="modal-overlay" id="calcModal">
+    <div class="modal-container" style="max-width:320px;">
+        <div class="modal-header">
+            <span style="font-weight:700;">简易计算器</span>
+            <button style="border:none; background:transparent; font-size:1.2rem; cursor:pointer;" id="btn-close-calc">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:16px; gap:10px;">
+            <div id="calc-display" style="background:#f4f6f4; border-radius:8px; padding:16px; font-size:1.5rem; font-weight:700; text-align:right; min-height:56px; word-break:break-all; color:var(--primary-dark);">0</div>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px;">
+                <button class="calc-btn" onclick="calcInput('C')" style="color:#c0392b;">C</button>
+                <button class="calc-btn" onclick="calcInput('(')">(</button>
+                <button class="calc-btn" onclick="calcInput(')')">)</button>
+                <button class="calc-btn" onclick="calcInput('/')" style="color:var(--primary-dark);">÷</button>
+                <button class="calc-btn" onclick="calcInput('7')">7</button>
+                <button class="calc-btn" onclick="calcInput('8')">8</button>
+                <button class="calc-btn" onclick="calcInput('9')">9</button>
+                <button class="calc-btn" onclick="calcInput('*')" style="color:var(--primary-dark);">×</button>
+                <button class="calc-btn" onclick="calcInput('4')">4</button>
+                <button class="calc-btn" onclick="calcInput('5')">5</button>
+                <button class="calc-btn" onclick="calcInput('6')">6</button>
+                <button class="calc-btn" onclick="calcInput('-')" style="color:var(--primary-dark);">−</button>
+                <button class="calc-btn" onclick="calcInput('1')">1</button>
+                <button class="calc-btn" onclick="calcInput('2')">2</button>
+                <button class="calc-btn" onclick="calcInput('3')">3</button>
+                <button class="calc-btn" onclick="calcInput('+')" style="color:var(--primary-dark);">+</button>
+                <button class="calc-btn" onclick="calcInput('0')" style="grid-column:1/3;">0</button>
+                <button class="calc-btn" onclick="calcInput('.')">.</button>
+                <button class="calc-btn" onclick="calcEval()" style="background:var(--primary); color:#fff; font-weight:700;">=</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // --- 历史记录存储（仅内存，每次打开页面清空） ---
     const MODULE_NAMES = {
@@ -742,8 +811,22 @@
             _skipRecord = true;
             if (sub === 'titer') { updateDilutionScheme(); updateTiter(); }
             if (sub === 'moi') updateMOI();
-            clearTimeout(debounceTimers["titer"]);
-            clearTimeout(debounceTimers["moi"]);
+            clearTimeout(debounceTimers["titer"]); clearTimeout(debounceTimers["moi"]);
+            setTimeout(() => { _skipRecord = false; }, 200);
+        });
+    });
+    // 溶液配制子标签
+    document.querySelectorAll('.sub-tab[data-solsub]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sub = btn.dataset.solsub;
+            btn.parentElement.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('sol-sub-conc').classList.toggle('hidden-input', sub !== 'conc');
+            document.getElementById('sol-sub-fold').classList.toggle('hidden-input', sub !== 'fold');
+            _skipRecord = true;
+            if (sub === 'conc') updateSolution();
+            if (sub === 'fold') updateFold();
+            clearTimeout(debounceTimers["solution"]);
             setTimeout(() => { _skipRecord = false; }, 200);
         });
     });
@@ -785,6 +868,23 @@
             const el = document.getElementById(id);
             if (el) el.value = val;
         });
+    }
+
+    // --- 简易计算器 ---
+    let calcExpr = '0';
+    function calcInput(val) {
+        if (val === 'C') { calcExpr = '0'; }
+        else if (calcExpr === '0' && val !== '.') { calcExpr = val; }
+        else { calcExpr += val; }
+        document.getElementById('calc-display').textContent = calcExpr.replace(/\*/g, '×').replace(/\//g, '÷');
+    }
+    function calcEval() {
+        try {
+            let expr = calcExpr.replace(/×/g, '*').replace(/÷/g, '/');
+            let result = Function('"use strict"; return (' + expr + ')')();
+            calcExpr = String(Number.isFinite(result) ? parseFloat(result.toPrecision(12)) : result);
+        } catch(e) { calcExpr = 'Error'; }
+        document.getElementById('calc-display').textContent = calcExpr;
     }
 
     // --- 防抖：输完才记录历史 ---
@@ -877,6 +977,9 @@
             outputs["获取体积"] = `${(reqVol*1000).toFixed(0)} μL`;
         }
 
+        // 动态更新底部公式说明
+        let noteText = mode === 'known' ? '直接使用已知浓度，跳过血球计数板计算' : '计算公式：细胞浓度 (10⁶ 个/mL) = (4大格总数 / 4) × 10⁴ × 稀释倍数 / 10⁶';
+        document.getElementById('cellNote').textContent = noteText;
         document.getElementById('cellResult').innerHTML = html;
         debounceRecord("cell", () => { recordHistory('cell', inputs, outputs, {
             cell_total: total, cell_dilution: dilution, cell_vol: curVol, cell_mode: mode,
@@ -890,6 +993,14 @@
     let currentFragmentCount = 3;
     function renderFragments() {
         let count = parseInt(document.getElementById('fragment_count').value) || 3;
+        // Save current values before re-rendering
+        let saved = [];
+        for (let i = 1; i <= 5; i++) {
+            let bp = document.getElementById(`frag${i}_bp`);
+            let conc = document.getElementById(`frag${i}_conc`);
+            let ratio = document.getElementById(`frag${i}_ratio`);
+            if (bp) saved.push({ bp: bp.value, conc: conc?.value || 200, ratio: ratio?.value || 2 });
+        }
         currentFragmentCount = count;
         const container = document.getElementById('fragments_container');
         container.innerHTML = '';
@@ -899,9 +1010,9 @@
             fragDiv.innerHTML = `
                 <div class="card-item-title">插入片段 ${i}</div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">
-                    <div class="input-field"><label>长度（bp）</label><input type="number" id="frag${i}_bp" value="${[2000,1500,800,600,400][i-1] || 500}"></div>
-                    <div class="input-field"><label>浓度（ng/μL）</label><input type="number" id="frag${i}_conc" value="${[500,400,300,250,200][i-1] || 100}"></div>
-                    <div class="input-field"><label>摩尔比 (片段:载体)</label><input type="number" id="frag${i}_ratio" value="2" step="0.5"></div>
+                    <div class="input-field"><label>长度（bp）</label><input type="number" id="frag${i}_bp" value="${saved[i-1]?.bp || [2000,1500,800,600,400][i-1] || 500}"></div>
+                    <div class="input-field"><label>浓度（ng/μL）</label><input type="number" id="frag${i}_conc" value="${saved[i-1]?.conc || [500,400,300,250,200][i-1] || 100}"></div>
+                    <div class="input-field"><label>摩尔比 (片段:载体)</label><input type="number" id="frag${i}_ratio" value="${saved[i-1]?.ratio || 2}" step="0.5"></div>
                 </div>
             `;
             container.appendChild(fragDiv);
@@ -981,6 +1092,16 @@
     function renderTransfectionGroups() {
         let pCount = parseInt(document.getElementById('plasmid_count').value) || 3;
         let gCount = parseInt(document.getElementById('group_count').value) || 2;
+        // Save current values before re-rendering
+        let saved = {};
+        for (let g = 1; g <= 10; g++) {
+            if (!saved[g]) saved[g] = {};
+            for (let p = 1; p <= 5; p++) {
+                let massEl = document.getElementById(`g${g}_p${p}_mass`);
+                let concEl = document.getElementById(`g${g}_p${p}_conc`);
+                if (massEl || concEl) saved[g][p] = { mass: massEl?.value, conc: concEl?.value };
+            }
+        }
         currentPlasmidCount = pCount;
         currentGroupCount = gCount;
         const container = document.getElementById('transfection_groups');
@@ -992,8 +1113,8 @@
             let html = `<div class="card-item-title">实验组 ${g}</div><div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">`;
             for (let p = 1; p <= pCount; p++) {
                 html += `
-                    <div class="input-field"><label>P${p} 质量 (μg)</label><input type="number" id="g${g}_p${p}_mass" value="${p===1?4:(p===2?1:3)}"></div>
-                    <div class="input-field"><label>P${p} 浓度（ng/μL）</label><input type="number" id="g${g}_p${p}_conc" value="${p===1?500:(p===2?300:200)}"></div>
+                    <div class="input-field"><label>P${p} 质量 (μg)</label><input type="number" id="g${g}_p${p}_mass" value="${saved[g]?.[p]?.mass || (p===1?4:(p===2?1:3))}"></div>
+                    <div class="input-field"><label>P${p} 浓度（ng/μL）</label><input type="number" id="g${g}_p${p}_conc" value="${saved[g]?.[p]?.conc || (p===1?500:(p===2?300:200))}"></div>
                 `;
             }
             html += `</div>`;
@@ -1062,15 +1183,44 @@
         let reqStockUl = sUg > 0 ? (tVolUl * tUg) / sUg : 0;
         let diluentUl = tVolUl - reqStockUl;
 
+        // 自动转换大体积单位
+        let stockDisp = reqStockUl >= 1000 ? `${(reqStockUl/1000).toFixed(2)} mL` : `${reqStockUl.toFixed(2)} μL`;
+        let dilVol = tVolUnit === 'ml' ? diluentUl/1000 : diluentUl;
+        let dilUnit = tVolUnit === 'ml' ? 'mL' : 'μL';
+        if (dilVol >= 1000 && dilUnit === 'μL') { dilVol /= 1000; dilUnit = 'mL'; }
         document.getElementById('solutionResult').innerHTML = `
-            <div class="result-badge"><label>吸取母液体积</label><div class="val" style="color:var(--accent);">${reqStockUl.toFixed(2)} <span style="font-size:0.8rem">μL</span></div></div>
-            <div class="result-badge"><label>加入稀释液/溶剂</label><div class="val">${(tVolUnit === 'ml' ? diluentUl/1000 : diluentUl).toFixed(2)} <span style="font-size:0.8rem">${tVolUnit==='ml'?'mL':'μL'}</span></div></div>
+            <div class="result-badge"><label>吸取母液体积</label><div class="val" style="color:var(--accent);">${stockDisp}</div></div>
+            <div class="result-badge"><label>加入稀释液/溶剂</label><div class="val">${dilVol.toFixed(2)} <span style="font-size:0.8rem">${dilUnit}</span></div></div>
             <div class="formula-line">公式：C₁ × V₁ = C₂ × V₂  |  母液体积 = (目标浓度 × 目标体积) / 母液浓度</div>
         `;
-        debounceRecord("solution", () => { recordHistory('solution', { "母液": `${sVal} ${sUnit}` }, { "需母液": `${reqStockUl.toFixed(2)} μL` }, {
+        debounceRecord("solution", () => { recordHistory('solution', { "模式": "浓度稀释", "母液": `${sVal} ${sUnit}`, "目标": `${tConcVal} ${tConcUnit}`, "体积": `${tVolVal}${tVolUnit}` }, { "需母液": `${reqStockUl.toFixed(2)} μL` }, {
             stock_conc_val: sVal, stock_conc_unit: sUnit,
             target_conc_val: tConcVal, target_conc_unit: tConcUnit,
             target_vol_val: tVolVal, target_vol_unit: tVolUnit
+        }); });
+    }
+
+    // --- 5b. 溶液倍数稀释 ---
+    function updateFold() {
+        let sFold = parseFloat(document.getElementById('fold_stock').value) || 1;
+        let tFold = parseFloat(document.getElementById('fold_target').value) || 0;
+        let volVal = parseFloat(document.getElementById('fold_vol_val').value) || 0;
+        let volUnit = document.getElementById('fold_vol_unit').value;
+
+        let reqVol = sFold > 0 ? (tFold * volVal) / sFold : 0;
+        let diluent = volVal - reqVol;
+        let u = volUnit === 'ml' ? 'mL' : 'μL';
+
+        document.getElementById('foldResult').innerHTML = `
+            <div class="result-badge"><label>需加 ${sFold}× 母液</label><div class="val" style="color:var(--accent);">${reqVol.toFixed(2)} <span style="font-size:0.8rem">${u}</span></div></div>
+            <div class="result-badge"><label>加入稀释液/溶剂</label><div class="val">${diluent.toFixed(2)} <span style="font-size:0.8rem">${u}</span></div></div>
+            <div class="formula-line">公式：母液体积 = (目标倍数 / 母液倍数) × 体系总体积</div>
+        `;
+        debounceRecord("solution", () => { recordHistory('solution', { "模式": "倍数稀释", "母液": `${sFold}×`, "目标": `${tFold}×`, "体系": `${volVal}${volUnit}` }, { "需母液": `${reqVol.toFixed(2)} ${u}` }, {
+            fold_stock: document.getElementById('fold_stock').value,
+            fold_target: document.getElementById('fold_target').value,
+            fold_vol_val: document.getElementById('fold_vol_val').value,
+            fold_vol_unit: document.getElementById('fold_vol_unit').value
         }); });
     }
 
@@ -1092,7 +1242,7 @@
             <div class="result-badge"><label>上 / 下游引物各</label><div class="val">${totFwd.toFixed(1)} / ${totRev.toFixed(1)} μL</div></div>
             <div class="result-badge"><label>ddH₂O 补水总量</label><div class="val" style="color:var(--accent);">${water.toFixed(1)} μL</div></div>
             <div class="result-badge"><label>Master Mix 总体积</label><div class="val">${totSys.toFixed(1)} μL</div></div>
-            <div class="formula-line">公式：各组分总量 = 单反应用量 × 样本数  |  ddH₂O = 总预混体积 − 各组分总和</div>
+            <div class="formula-line">公式：各组分总量 = 单反应用量 × 样本数  |  ddH₂O = 总预混体积 − 各组分总和  |  模板单独分装</div>
         `;
         debounceRecord("pcr", () => { recordHistory('pcr', { "样品数": n }, { "总体积": `${totSys} μL` }, {
             pcr_samples: document.getElementById('pcr_samples').value,
@@ -1187,11 +1337,23 @@
         document.getElementById('plate_type').addEventListener('change', (e) => {
             const map = {6:[9.6,2], 12:[3.8,1], 24:[1.9,0.5], 48:[0.7,0.2], 96:[0.3,0.1], "10cm":[55,10]};
             const val = map[e.target.value];
-            if (val) {
+            if (val && e.target.value !== 'custom') {
                 document.getElementById('area_per_well').value = val[0];
                 document.getElementById('med_per_well').value = val[1];
                 updatePlating();
             }
+        });
+        // 手动编辑面积/体积时标记为自定义
+        ['area_per_well','med_per_well'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                const sel = document.getElementById('plate_type');
+                if (!sel.querySelector('option[value=\"custom\"]')) {
+                    const opt = document.createElement('option');
+                    opt.value = 'custom'; opt.textContent = '自定义';
+                    sel.appendChild(opt);
+                }
+                sel.value = 'custom';
+            });
         });
 
         document.getElementById('plasmid_count').addEventListener('change', renderTransfectionGroups);
@@ -1200,6 +1362,8 @@
 
         bindInputs(['stock_conc_val','target_conc_val','target_vol_val'], updateSolution);
         bindSelects(['stock_conc_unit','target_conc_unit','target_vol_unit'], updateSolution);
+        bindInputs(['fold_stock','fold_target','fold_vol_val'], updateFold);
+        bindSelects(['fold_vol_unit'], updateFold);
         bindInputs(['pcr_samples','pcr_sys','pcr_pol','pcr_fwd','pcr_rev','pcr_tpl'], updatePCR);
 
         bindInputs(['titer_first_vol','titer_fluo_total','titer_repeats'], () => {
@@ -1216,6 +1380,15 @@
         document.getElementById('btn-close-history').addEventListener('click', () => {
             document.getElementById('historyModal').style.display = 'none';
         });
+        // 计算器弹窗
+        document.getElementById('btn-open-calc').addEventListener('click', () => {
+            calcExpr = '0'; document.getElementById('calc-display').textContent = '0';
+            document.getElementById('calcModal').style.display = 'flex';
+        });
+        document.getElementById('btn-close-calc').addEventListener('click', () => {
+            document.getElementById('calcModal').style.display = 'none';
+        });
+
         document.getElementById('btn-clear-history').addEventListener('click', () => {
             historyRecords = [];
             lastInputs = {};
