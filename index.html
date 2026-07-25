@@ -65,28 +65,57 @@
         }
         .nav-back:hover { background: var(--primary-light); }
         .nav-title { flex: 1; font-size: 0.9rem; font-weight: 700; color: var(--primary-dark); }
-        .nav-actions { display: flex; gap: 6px; }
-        .nav-action-btn {
-            background: var(--primary); color: #fff; border: none;
-            padding: 7px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; cursor: pointer;
+        .nav-icon-btn {
+            background: var(--primary); color: #fff; border: none; border-radius: 6px;
+            padding: 6px 10px; font-size: 0.82rem; cursor: pointer; transition: .15s; font-weight: 500;
         }
-        .nav-action-btn:hover { background: var(--primary-dark); }
+        .nav-icon-btn:hover { background: var(--primary-dark); }
 
         /* 首页 */
-        .home-hero { text-align: center; padding: 36px 0 20px; }
-        .home-hero h2 { font-size: 1.4rem; color: var(--primary-dark); margin-bottom: 4px; }
-        .home-hero p { font-size: 0.85rem; color: var(--text-muted); }
+        .home-hero {
+            text-align: center; padding: 40px 0 16px;
+            background: linear-gradient(180deg, #eaf4ec 0%, #fff 100%);
+            margin: -24px -28px 0; border-radius: 0;
+        }
+        .home-hero h2 { font-size: 1.5rem; color: var(--primary-dark); margin-bottom: 4px; font-weight: 800; }
+        .home-hero p { font-size: 0.88rem; color: var(--text-muted); }
         .home-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 14px; padding: 4px 28px 28px;
+            gap: 14px; padding: 24px 28px 8px;
         }
         .home-card {
             background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-md);
-            padding: 18px 20px; cursor: pointer; transition: .15s;
+            padding: 20px 22px; cursor: pointer; transition: .2s;
+            display: flex; align-items: flex-start; gap: 12px;
         }
-        .home-card:hover { border-color: var(--primary); box-shadow: 0 3px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
-        .home-card .hc-title { font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+        .home-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .home-card .hc-dot {
+            width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.82rem; font-weight: 700; color: #fff;
+        }
+        .home-card:nth-child(1) .hc-dot { background: var(--primary); }
+        .home-card:nth-child(2) .hc-dot { background: var(--accent); }
+        .home-card:nth-child(3) .hc-dot { background: #5b9bd5; }
+        .home-card:nth-child(4) .hc-dot { background: #e67e22; }
+        .home-card:nth-child(5) .hc-dot { background: #9b59b6; }
+        .home-card:nth-child(6) .hc-dot { background: #e74c3c; }
+        .home-card:nth-child(7) .hc-dot { background: #2c9c8e; }
+        .home-card:nth-child(8) .hc-dot { background: #7f8c8d; }
+        .home-card .hc-title { font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 3px; }
         .home-card .hc-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+
+        /* 首页工具行 */
+        .home-tools { display: flex; gap: 14px; padding: 0 28px 28px; }
+        .tool-card {
+            flex: 1; border: 1px solid var(--border-color); border-radius: var(--radius-md);
+            padding: 18px 20px; cursor: pointer; transition: .2s; text-align: center;
+            background: #fff;
+        }
+        .tool-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .tool-card .tc-icon { font-size: 1.8rem; font-weight: 700; margin-bottom: 4px; }
+        .tool-card .tc-title { font-size: 0.9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 2px; }
+        .tool-card .tc-desc { font-size: 0.75rem; color: var(--text-muted); }
 
         /* 模块面板 */
         .module-pane {
@@ -347,12 +376,16 @@
             .result-badge { flex: 1 1 100%; }
             .section-title { flex-wrap: wrap; gap: 8px; font-size: 1.1rem; }
             .sub-tabs { flex-shrink: 0; }
-            .home-hero { padding: 24px 0 12px; }
+            .home-hero { padding: 24px 0 10px; margin: -12px -12px 0; }
             .home-hero h2 { font-size: 1.15rem; }
-            .home-grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 4px 12px 20px; }
-            .home-card { padding: 14px 12px; }
-            .home-card .hc-title { font-size: 0.85rem; }
-            .home-card .hc-desc { font-size: 0.72rem; }
+            .home-grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 12px 8px; }
+            .home-card { padding: 14px 12px; gap: 8px; }
+            .home-card .hc-dot { width: 28px; height: 28px; border-radius: 8px; font-size: 0.7rem; }
+            .home-card .hc-title { font-size: 0.82rem; }
+            .home-card .hc-desc { font-size: 0.7rem; }
+            .home-tools { padding: 0 12px 20px; gap: 10px; }
+            .tool-card { padding: 12px 10px; }
+            .tool-card .tc-icon { font-size: 1.4rem; }
             .nav-bar { padding: 8px 10px; }
             .nav-title { font-size: 0.82rem; }
         }
@@ -364,11 +397,9 @@
     <!-- 顶部导航栏 -->
     <div class="nav-bar" id="navBar">
         <button class="nav-back" id="btn-back" style="display:none;">← 返回</button>
-        <span class="nav-title" id="navTitle"></span>
-        <div class="nav-actions">
-            <button class="nav-action-btn" id="btn-open-calc">计算器</button>
-            <button class="nav-action-btn" id="btn-open-history">最近记录</button>
-        </div>
+        <span class="nav-title" id="navTitle">实验计算工具箱</span>
+        <button class="nav-icon-btn" id="nav-btn-calc" title="计算器">+−×÷</button>
+        <button class="nav-icon-btn" id="nav-btn-history" title="最近记录">&#x1D4DB;</button>
     </div>
 
     <!-- 首页 -->
@@ -378,6 +409,18 @@
             <p>选择计算模块开始</p>
         </div>
         <div class="home-grid" id="homeGrid"></div>
+        <div class="home-tools">
+            <div class="tool-card" id="btn-open-calc">
+                <div class="tc-icon">+−×÷</div>
+                <div class="tc-title">简易计算器</div>
+                <div class="tc-desc">随时弹出四则运算</div>
+            </div>
+            <div class="tool-card" id="btn-open-history2">
+                <div class="tc-icon">&#x1D4DB;</div>
+                <div class="tc-title">最近记录</div>
+                <div class="tc-desc">查看和恢复历史计算</div>
+            </div>
+        </div>
     </div>
 
     <!-- 模块 1: 细胞计数 -->
@@ -825,22 +868,23 @@
 
     // --- 导航逻辑 ---
     const moduleInfo = {
-        cell: { title: '细胞计数与稀释调整', desc: '血球计数板换算、浓度调整、细胞获取' },
-        recomb: { title: '多片段同源重组', desc: '摩尔比换算，载体与片段体积计算' },
-        plating: { title: '细胞铺板与接种换算', desc: '孔板/培养皿面积比与悬液体积' },
-        transfect: { title: '转染复合物体系', desc: '多质粒多组别 PEI 转染计算' },
-        solution: { title: '溶液配制', desc: '浓度稀释与倍数稀释' },
-        pcr: { title: 'PCR Master Mix', desc: '预混液配制，模板单独分装' },
-        titer: { title: '病毒滴度与 MOI', desc: '梯度稀释滴度计算与感染用量' },
-        guide: { title: '使用说明', desc: '各模块输入参数与计算公式' }
+        cell: { title: '细胞计数与稀释调整', desc: '血球计数板换算、浓度调整、细胞获取', dot: '数' },
+        recomb: { title: '多片段同源重组', desc: '摩尔比换算，载体与片段体积计算', dot: '源' },
+        plating: { title: '细胞铺板与接种换算', desc: '孔板/培养皿面积比与悬液体积', dot: '铺' },
+        transfect: { title: '转染复合物体系', desc: '多质粒多组别 PEI 转染计算', dot: '转' },
+        solution: { title: '溶液配制', desc: '浓度稀释与倍数稀释', dot: '液' },
+        pcr: { title: 'PCR Master Mix', desc: '预混液配制，模板单独分装', dot: '预' },
+        titer: { title: '病毒滴度与 MOI', desc: '梯度稀释滴度计算与感染用量', dot: '毒' },
+        guide: { title: '使用说明', desc: '各模块输入参数与计算公式', dot: '?' }
     };
 
     function renderHomeGrid() {
         let html = '';
         Object.entries(moduleInfo).forEach(([key, info]) => {
             html += `<div class="home-card" onclick="navigateTo('${key}')">
-                <div class="hc-title">${info.title}</div>
-                <div class="hc-desc">${info.desc}</div>
+                <div class="hc-dot">${info.dot}</div>
+                <div><div class="hc-title">${info.title}</div>
+                <div class="hc-desc">${info.desc}</div></div>
             </div>`;
         });
         document.getElementById('homeGrid').innerHTML = html;
@@ -864,7 +908,7 @@
         document.querySelectorAll('.module-pane').forEach(p => p.classList.remove('active-pane'));
         document.getElementById('module-home').classList.add('active-pane');
         document.getElementById('btn-back').style.display = 'none';
-        document.getElementById('navTitle').textContent = '';
+        document.getElementById('navTitle').textContent = '实验计算工具箱';
     }
 
     document.getElementById('btn-back').addEventListener('click', goHome);
@@ -1398,21 +1442,14 @@
         bindInputs(['moi_cell_count','moi_value','moi_titer'], updateMOI);
 
         // 历史记录弹窗控制
-        document.getElementById('btn-open-history').addEventListener('click', () => {
-            renderModalHistory();
-            document.getElementById('historyModal').style.display = 'flex';
-        });
-        document.getElementById('btn-close-history').addEventListener('click', () => {
-            document.getElementById('historyModal').style.display = 'none';
-        });
-        // 计算器弹窗
-        document.getElementById('btn-open-calc').addEventListener('click', () => {
-            calcExpr = '0'; document.getElementById('calc-display').textContent = '0';
-            document.getElementById('calcModal').style.display = 'flex';
-        });
-        document.getElementById('btn-close-calc').addEventListener('click', () => {
-            document.getElementById('calcModal').style.display = 'none';
-        });
+        function openHistory() { renderModalHistory(); document.getElementById('historyModal').style.display = 'flex'; }
+        function openCalc() { calcExpr = '0'; document.getElementById('calc-display').textContent = '0'; document.getElementById('calcModal').style.display = 'flex'; }
+        document.getElementById('btn-open-history2').addEventListener('click', openHistory);
+        document.getElementById('nav-btn-history').addEventListener('click', openHistory);
+        document.getElementById('btn-close-history').addEventListener('click', () => { document.getElementById('historyModal').style.display = 'none'; });
+        document.getElementById('btn-open-calc').addEventListener('click', openCalc);
+        document.getElementById('nav-btn-calc').addEventListener('click', openCalc);
+        document.getElementById('btn-close-calc').addEventListener('click', () => { document.getElementById('calcModal').style.display = 'none'; });
 
         document.getElementById('btn-clear-history').addEventListener('click', () => {
             historyRecords = [];
