@@ -296,6 +296,15 @@
         }
         .btn-danger:hover { background: #fef0f0; }
 
+        /* 按钮组替代下拉 */
+        .btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
+        .btn-group button {
+            background: #fff; border: 1px solid var(--border-color); border-radius: 6px;
+            padding: 7px 14px; font-size: 0.85rem; cursor: pointer; transition: .15s; color: var(--text-muted); font-weight: 500;
+        }
+        .btn-group button.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-group button:hover:not(.on) { border-color: var(--primary); }
+
         .hist-card {
             background: #f8fafc;
             border: 1px solid var(--border-color);
@@ -312,8 +321,15 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .hist-header {
-            display: flex; justify-content: space-between; font-weight: 700; color: var(--primary); margin-bottom: 6px;
+            display: flex; justify-content: space-between; font-weight: 700; color: var(--primary); margin-bottom: 8px;
         }
+        .hist-kv { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+        .kv-item { font-size: 0.8rem; line-height: 1.5; }
+        .kv-key { color: var(--text-muted); }
+        .kv-key::after { content: ': '; }
+        .kv-val { color: var(--primary-dark); font-weight: 600; }
+        .hist-section { margin-bottom: 6px; }
+        .hist-section strong { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px; }
 
         /* 使用说明排版卡片 */
         .guide-card {
@@ -809,8 +825,8 @@
                         <span style="font-weight:normal; color:#94a3b8;">${item.time}</span>
                     </div>
                     <div style="color:#475569;">
-                        <div><strong>输入：</strong> ${formatObj(item.inputs)}</div>
-                        <div style="color:var(--primary-dark); margin-top:4px;"><strong>结果：</strong> ${formatObj(item.outputs)}</div>
+                        <div class="hist-section"><strong>输入</strong>${formatObj(item.inputs)}</div>
+                        <div class="hist-section"><strong>结果</strong>${formatObj(item.outputs)}</div>
                     </div>
                     <div style="font-size:0.72rem; color:var(--accent); margin-top:6px; text-align:right;">点击查看详情 &rarr;</div>
                 </div>
@@ -821,7 +837,12 @@
 
     function formatObj(obj) {
         if (!obj) return '-';
-        return Object.entries(obj).map(([k, v]) => `${k}: ${v}`).join(' | ');
+        let html = '<div class="hist-kv">';
+        Object.entries(obj).forEach(([k, v]) => {
+            html += `<span class="kv-item"><span class="kv-key">${k}</span><span class="kv-val">${v}</span></span>`;
+        });
+        html += '</div>';
+        return html;
     }
 
     // --- 子标签切换 ---
@@ -866,6 +887,32 @@
         titer: { title: '病毒滴度与 MOI', desc: '梯度稀释滴度计算与感染用量', dot: '毒' },
         guide: { title: '使用说明', desc: '各模块输入参数与计算公式', dot: '?' }
     };
+
+    // 按钮组工具
+    function makeBtnGroup(containerId, options, defaultVal, onChange) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.textContent = opt.label; btn.dataset.value = opt.value;
+            if (opt.value === defaultVal) btn.classList.add('on');
+            btn.addEventListener('click', () => {
+                container.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+                btn.classList.add('on');
+                // Store value in hidden input
+                let hidden = document.getElementById(containerId.replace('_btns',''));
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden'; hidden.id = containerId.replace('_btns','');
+                    container.parentElement.appendChild(hidden);
+                }
+                hidden.value = opt.value;
+                if (onChange) onChange(opt.value);
+            });
+            container.appendChild(btn);
+        });
+    }
 
     function renderHomeGrid() {
         let html = '';
@@ -1093,7 +1140,7 @@
         }
 
         document.getElementById('multiFragmentResult').innerHTML = html;
-        debounceRecord("recomb", () => { recordHistory('recomb', inputs, outputs, {
+        debounceRecord("recomb", () => { recordHistory('recomb', { "载体": `${vecMass} ng / ${vecBp} bp`, "片段数": currentFragmentCount }, outputs, {
             hr_vector_bp: document.getElementById('hr_vector_bp').value,
             hr_vector_conc: document.getElementById('hr_vector_conc').value,
             hr_vector_mass: document.getElementById('hr_vector_mass').value,
@@ -1123,7 +1170,7 @@
             <div class="result-badge"><label>每孔需补充培养基</label><div class="val" style="color:var(--accent);">${singleMedVol.toFixed(1)} <span style="font-size:0.8rem">μL</span></div></div>
             <div class="formula-line">公式：悬液 (μL) = (孔数 × 孔面积 × 接种率%) / (瓶面积 × 瓶汇合率%) × 重悬体积 × 1000</div>
         `;
-        debounceRecord("plating", () => { recordHistory('plating', { "目标孔数": wells }, { "总悬液": `${reqVolUl.toFixed(1)} μL` }, {
+        debounceRecord("plating", () => { recordHistory('plating', { "容器": document.getElementById('plate_type').value !== 'custom' ? document.getElementById('plate_type').options[document.getElementById('plate_type').selectedIndex]?.text : '自定义', "孔数": wells, "接种密度": `${seedConf}%` }, { "悬液": `${reqVolUl.toFixed(1)} μL`, "单孔接种": `${perWellVol.toFixed(1)} μL` }, {
             plate_type: document.getElementById('plate_type').value,
             area_per_well: document.getElementById('area_per_well').value,
             med_per_well: document.getElementById('med_per_well').value,
@@ -1208,13 +1255,19 @@
         for (let g = 1; g <= currentGroupCount; g++) html += `<td style="font-weight:bold; color:var(--primary-dark);">${tableData[g].peiVol}</td>`;
         html += `</tr></tbody></table></div>`;
 
-        let outputs = {};
+        let outputs = {}, inputs = {};
         for (let g = 1; g <= currentGroupCount; g++) {
             outputs[`组${g}`] = `DNA: ${tableData[g].totalMass} μg | PEI: ${tableData[g].peiVol} μL`;
+            let ms = [];
+            for (let p = 1; p <= currentPlasmidCount; p++) {
+                let m = parseFloat(document.getElementById(`g${g}_p${p}_mass`)?.value) || 0;
+                ms.push(`P${p}:${m}μg`);
+            }
+            inputs[`组${g}`] = ms.join(' ');
         }
         html += `<div class="formula-line">公式：质粒体积 (μL) = (质量 μg × 1000) / 浓度(ng/μL)  |  PEI (μL) = 总DNA (μg) × PEI/DNA 比值</div>`;
         document.getElementById('transfectionResult').innerHTML = html;
-        debounceRecord("transfect", () => { recordHistory('transfect', { "组数": currentGroupCount }, outputs, {
+        debounceRecord("transfect", () => { recordHistory('transfect', inputs, outputs, {
             plasmid_count: document.getElementById('plasmid_count').value,
             group_count: document.getElementById('group_count').value,
             pei_ratio: document.getElementById('pei_ratio').value
@@ -1251,7 +1304,8 @@
             <div class="result-badge"><label>加入稀释液/溶剂</label><div class="val">${dilVol.toFixed(2)} <span style="font-size:0.8rem">${dilUnit}</span></div></div>
             <div class="formula-line">公式：C₁ × V₁ = C₂ × V₂  |  母液体积 = (目标浓度 × 目标体积) / 母液浓度</div>
         `;
-        debounceRecord("solution", () => { recordHistory('solution', { "模式": "浓度稀释", "母液": `${sVal} ${sUnit}`, "目标": `${tConcVal} ${tConcUnit}`, "体积": `${tVolVal}${tVolUnit}` }, { "需母液": `${reqStockUl.toFixed(2)} μL` }, {
+        const unitNames = { mg_per_ml: 'mg/mL', ug_per_ml: 'μg/mL', ug_per_ul: 'μg/μL', ng_per_ul: 'ng/μL' };
+        debounceRecord("solution", () => { recordHistory('solution', { "模式": "浓度稀释", "母液": `${sVal} ${unitNames[sUnit]}`, "→": `${tConcVal} ${unitNames[tConcUnit]}`, "体积": `${tVolVal} ${tVolUnit}` }, { "需母液": stockDisp }, {
             stock_conc_val: sVal, stock_conc_unit: sUnit,
             target_conc_val: tConcVal, target_conc_unit: tConcUnit,
             target_vol_val: tVolVal, target_vol_unit: tVolUnit
@@ -1274,7 +1328,7 @@
             <div class="result-badge"><label>加入稀释液/溶剂</label><div class="val">${diluent.toFixed(2)} <span style="font-size:0.8rem">${u}</span></div></div>
             <div class="formula-line">公式：母液体积 = (目标倍数 / 母液倍数) × 体系总体积</div>
         `;
-        debounceRecord("solution", () => { recordHistory('solution', { "模式": "倍数稀释", "母液": `${sFold}×`, "目标": `${tFold}×`, "体系": `${volVal}${volUnit}` }, { "需母液": `${reqVol.toFixed(2)} ${u}` }, {
+        debounceRecord("solution", () => { recordHistory('solution', { "模式": "倍数稀释", "母液": `${sFold}× → ${tFold}×`, "体系": `${volVal} ${volUnit}` }, { "需母液": `${reqVol.toFixed(2)} ${u}` }, {
             fold_stock: document.getElementById('fold_stock').value,
             fold_target: document.getElementById('fold_target').value,
             fold_vol_val: document.getElementById('fold_vol_val').value,
