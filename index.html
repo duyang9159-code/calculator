@@ -272,8 +272,8 @@
             justify-content: center; align-items: center; padding: 20px;
         }
         .modal-container {
-            background: #fff; width: 100%; max-width: 400px; max-height: 75vh;
-            border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            background: #fff; width: 92%; max-width: 360px; max-height: 70vh;
+            border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.25);
             display: flex; flex-direction: column; overflow: hidden;
         }
         .modal-header {
@@ -346,8 +346,8 @@
         .sub-tab:hover:not(.active) { border-color: var(--primary); color: var(--primary-dark); }
 
         .calc-btn {
-            background: #fff; border: 1px solid var(--border-color); border-radius: 8px;
-            padding: 14px 0; font-size: 1.05rem; cursor: pointer; transition: .1s; text-align: center;
+            background: #fff; border: 1px solid var(--border-color); border-radius: 6px;
+            padding: 10px 0; font-size: 0.95rem; cursor: pointer; font-weight: 500; transition: .1s; text-align: center;
         }
         .calc-btn:hover { background: #eef2ee; }
         .calc-btn:active { background: #d8e5d8; }
@@ -716,14 +716,14 @@
 
 <!-- 简易计算器弹窗 -->
 <div class="modal-overlay" id="calcModal">
-    <div class="modal-container" style="max-width:320px;">
+    <div class="modal-container" style="max-width:300px;">
         <div class="modal-header">
             <span>简易计算器</span>
             <button class="modal-close" id="btn-close-calc">&times;</button>
         </div>
-        <div class="modal-body" style="padding:16px; gap:10px;">
-            <div id="calc-display" style="background:#f4f6f4; border-radius:8px; padding:16px; font-size:1.5rem; font-weight:700; text-align:right; min-height:56px; word-break:break-all; color:var(--primary-dark);">0</div>
-            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px;">
+        <div class="modal-body" style="padding:12px; gap:8px;">
+            <div id="calc-display" style="background:#f4f6f4; border-radius:6px; padding:12px; font-size:1.3rem; font-weight:700; text-align:right; min-height:44px; word-break:break-all; color:var(--primary-dark);">0</div>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
                 <button class="calc-btn" onclick="calcInput('C')" style="color:#c0392b;">C</button>
                 <button class="calc-btn" onclick="calcInput('(')">(</button>
                 <button class="calc-btn" onclick="calcInput(')')">)</button>
