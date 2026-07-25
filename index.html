@@ -95,13 +95,13 @@
             font-size: 0.82rem; font-weight: 700; color: #fff;
         }
         .home-card:nth-child(1) .hc-dot { background: var(--primary); }
-        .home-card:nth-child(2) .hc-dot { background: var(--accent); }
-        .home-card:nth-child(3) .hc-dot { background: #5b9bd5; }
-        .home-card:nth-child(4) .hc-dot { background: #e67e22; }
-        .home-card:nth-child(5) .hc-dot { background: #9b59b6; }
-        .home-card:nth-child(6) .hc-dot { background: #e74c3c; }
-        .home-card:nth-child(7) .hc-dot { background: #2c9c8e; }
-        .home-card:nth-child(8) .hc-dot { background: #7f8c8d; }
+        .home-card:nth-child(2) .hc-dot { background: #3a7d5a; }
+        .home-card:nth-child(3) .hc-dot { background: var(--accent); }
+        .home-card:nth-child(4) .hc-dot { background: #5a9e7c; }
+        .home-card:nth-child(5) .hc-dot { background: #6db890; }
+        .home-card:nth-child(6) .hc-dot { background: #4d8c6b; }
+        .home-card:nth-child(7) .hc-dot { background: #2d6a4f; }
+        .home-card:nth-child(8) .hc-dot { background: #819e8c; }
         .home-card .hc-title { font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 3px; }
         .home-card .hc-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
 
@@ -776,10 +776,11 @@
     function recordHistory(key, inputsObj, outputsObj, fieldsObj) {
         saveInputs(key, fieldsObj);
         const now = new Date();
+        const ds = `${now.getMonth()+1}/${now.getDate()} `;
         historyRecords.unshift({
             moduleName: MODULE_NAMES[key] || key,
             moduleKey: key,
-            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            time: ds + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             inputs: inputsObj,
             outputs: outputsObj,
             fields: fieldsObj || {}
