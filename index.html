@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LabSuite | 模块化生物实验室计算工具箱</title>
+    <title>实验计算工具箱</title>
     <style>
         :root {
             --primary: #40916c;
@@ -51,46 +51,42 @@
             flex-direction: column;
         }
 
-        /* 导航 Tab */
-        .nav-tabs {
-            display: flex; flex-wrap: wrap;
-            background: #f8f9f7;
-            border-bottom: 1px solid var(--border-color);
-            padding: 6px 10px; gap: 2px;
+        /* 导航栏 */
+        .nav-bar {
+            display: flex; align-items: center;
+            background: #f8f9f7; border-bottom: 1px solid var(--border-color);
+            padding: 10px 14px; gap: 10px;
             position: sticky; top: 0; z-index: 100;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
+        .nav-back {
+            background: transparent; border: none; font-size: 0.88rem; font-weight: 600;
+            color: var(--primary); cursor: pointer; padding: 4px 8px; border-radius: 6px;
+        }
+        .nav-back:hover { background: var(--primary-light); }
+        .nav-title { flex: 1; font-size: 0.9rem; font-weight: 700; color: var(--primary-dark); }
+        .nav-actions { display: flex; gap: 6px; }
+        .nav-action-btn {
+            background: var(--primary); color: #fff; border: none;
+            padding: 7px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; cursor: pointer;
+        }
+        .nav-action-btn:hover { background: var(--primary-dark); }
 
-        .tab-btn {
-            background: transparent;
-            border: none;
-            padding: 8px 12px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.15s ease;
+        /* 首页 */
+        .home-hero { text-align: center; padding: 36px 0 20px; }
+        .home-hero h2 { font-size: 1.4rem; color: var(--primary-dark); margin-bottom: 4px; }
+        .home-hero p { font-size: 0.85rem; color: var(--text-muted); }
+        .home-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px; padding: 4px 28px 28px;
         }
-        .tab-btn:hover { color: var(--primary-dark); }
-        .tab-btn.active {
-            color: #fff;
-            background: var(--primary);
+        .home-card {
+            background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-md);
+            padding: 18px 20px; cursor: pointer; transition: .15s;
         }
-
-        .history-toggle-btn {
-            margin-left: auto;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-        .history-toggle-btn:hover { background: var(--primary-dark); }
+        .home-card:hover { border-color: var(--primary); box-shadow: 0 3px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .home-card .hc-title { font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+        .home-card .hc-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
 
         /* 模块面板 */
         .module-pane {
@@ -346,10 +342,19 @@
         @media (max-width: 640px) {
             body { padding: 0; }
             .app-container { border-radius: 0; border: none; }
-            .module-pane { padding: 16px; }
-            .input-grid { grid-template-columns: 1fr; gap: 12px; }
+            .module-pane { padding: 12px; }
+            .input-grid { grid-template-columns: 1fr; gap: 10px; padding: 12px; }
             .result-badge { flex: 1 1 100%; }
-            .history-toggle-btn { width: 100%; justify-content: center; margin-top: 8px; }
+            .section-title { flex-wrap: wrap; gap: 8px; font-size: 1.1rem; }
+            .sub-tabs { flex-shrink: 0; }
+            .home-hero { padding: 24px 0 12px; }
+            .home-hero h2 { font-size: 1.15rem; }
+            .home-grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 4px 12px 20px; }
+            .home-card { padding: 14px 12px; }
+            .home-card .hc-title { font-size: 0.85rem; }
+            .home-card .hc-desc { font-size: 0.72rem; }
+            .nav-bar { padding: 8px 10px; }
+            .nav-title { font-size: 0.82rem; }
         }
     </style>
 </head>
@@ -357,21 +362,26 @@
 
 <div class="app-container">
     <!-- 顶部导航栏 -->
-    <div class="nav-tabs">
-        <button class="tab-btn active" data-module="cell">细胞计数</button>
-        <button class="tab-btn" data-module="recomb">多片段重组</button>
-        <button class="tab-btn" data-module="plating">铺板计算</button>
-        <button class="tab-btn" data-module="transfect">转染体系</button>
-        <button class="tab-btn" data-module="solution">溶液配制</button>
-        <button class="tab-btn" data-module="pcr">PCR 预混液</button>
-        <button class="tab-btn" data-module="titer">滴度与 MOI</button>
-        <button class="tab-btn" data-module="guide">使用说明</button>
-        <button class="history-toggle-btn" id="btn-open-calc" style="margin-right:6px;">计算器</button>
-        <button class="history-toggle-btn" id="btn-open-history">最近记录</button>
+    <div class="nav-bar" id="navBar">
+        <button class="nav-back" id="btn-back" style="display:none;">← 返回</button>
+        <span class="nav-title" id="navTitle"></span>
+        <div class="nav-actions">
+            <button class="nav-action-btn" id="btn-open-calc">计算器</button>
+            <button class="nav-action-btn" id="btn-open-history">最近记录</button>
+        </div>
+    </div>
+
+    <!-- 首页 -->
+    <div id="module-home" class="module-pane active-pane">
+        <div class="home-hero">
+            <h2>实验计算工具箱</h2>
+            <p>选择计算模块开始</p>
+        </div>
+        <div class="home-grid" id="homeGrid"></div>
     </div>
 
     <!-- 模块 1: 细胞计数 -->
-    <div id="module-cell" class="module-pane active-pane">
+    <div id="module-cell" class="module-pane">
         <div class="section-title">
             <span>细胞计数与稀释调整</span>
         </div>
@@ -731,33 +741,23 @@
     }
 
     function restoreHistory(moduleKey, fields) {
-        // Close modal
         document.getElementById('historyModal').style.display = 'none';
-        // Switch tab
-        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-        const targetBtn = document.querySelector(`.tab-btn[data-module="${moduleKey}"]`);
-        if (targetBtn) targetBtn.classList.add('active');
-        document.querySelectorAll('.module-pane').forEach(p => p.classList.remove('active-pane'));
-        const pane = document.getElementById(`module-${moduleKey}`);
-        if (pane) pane.classList.add('active-pane');
-        // Restore field values
-        Object.entries(fields).forEach(([id, val]) => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.value = val;
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-                el.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-        });
-        // Trigger render + calc (moi routes to titer tab)
         const realKey = moduleKey === 'moi' ? 'titer' : moduleKey;
-        if (realKey === 'cell') updateCellCalc();
-        if (realKey === 'recomb') { renderFragments(); setTimeout(updateMultiFragment, 200); }
-        if (realKey === 'plating') updatePlating();
-        if (realKey === 'transfect') { renderTransfectionGroups(); setTimeout(updateTransfection, 200); }
-        if (realKey === 'solution') updateSolution();
-        if (realKey === 'pcr') updatePCR();
-        if (realKey === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
+        navigateTo(realKey);
+        // Restore field values after navigateTo has shown the pane
+        setTimeout(() => {
+            Object.entries(fields).forEach(([id, val]) => {
+                const el = document.getElementById(id);
+                if (el) { el.value = val; el.dispatchEvent(new Event('input', {bubbles:true})); }
+            });
+            if (realKey === 'cell') updateCellCalc();
+            if (realKey === 'recomb') { renderFragments(); setTimeout(updateMultiFragment, 200); }
+            if (realKey === 'plating') updatePlating();
+            if (realKey === 'transfect') { renderTransfectionGroups(); setTimeout(updateTransfection, 200); }
+            if (realKey === 'solution') updateSolution();
+            if (realKey === 'pcr') updatePCR();
+            if (realKey === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
+        }, 150);
     }
 
     function renderModalHistory() {
@@ -823,29 +823,51 @@
         });
     });
 
-    // --- Tab 切换逻辑 ---
-    const tabs = document.querySelectorAll('.tab-btn');
-    const panes = document.querySelectorAll('.module-pane');
-    tabs.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const mod = btn.getAttribute('data-module');
-            if (!mod) return;
-            tabs.forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            panes.forEach(p => p.classList.remove('active-pane'));
-            document.getElementById(`module-${mod}`).classList.add('active-pane');
+    // --- 导航逻辑 ---
+    const moduleInfo = {
+        cell: { title: '细胞计数与稀释调整', desc: '血球计数板换算、浓度调整、细胞获取' },
+        recomb: { title: '多片段同源重组', desc: '摩尔比换算，载体与片段体积计算' },
+        plating: { title: '细胞铺板与接种换算', desc: '孔板/培养皿面积比与悬液体积' },
+        transfect: { title: '转染复合物体系', desc: '多质粒多组别 PEI 转染计算' },
+        solution: { title: '溶液配制', desc: '浓度稀释与倍数稀释' },
+        pcr: { title: 'PCR Master Mix', desc: '预混液配制，模板单独分装' },
+        titer: { title: '病毒滴度与 MOI', desc: '梯度稀释滴度计算与感染用量' },
+        guide: { title: '使用说明', desc: '各模块输入参数与计算公式' }
+    };
 
-            // 加载上次输入，切换时不记录
-            loadInputs(mod);
-            _skipRecord = true;
-            // 模块切换重绘触发
-            if (mod === 'transfect') renderTransfectionGroups();
-            if (mod === 'recomb') renderFragments();
-            if (mod === 'cell') updateCellCalc();
-            if (mod === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
-            setTimeout(() => { _skipRecord = false; }, 100);
+    function renderHomeGrid() {
+        let html = '';
+        Object.entries(moduleInfo).forEach(([key, info]) => {
+            html += `<div class="home-card" onclick="navigateTo('${key}')">
+                <div class="hc-title">${info.title}</div>
+                <div class="hc-desc">${info.desc}</div>
+            </div>`;
         });
-    });
+        document.getElementById('homeGrid').innerHTML = html;
+    }
+
+    function navigateTo(mod) {
+        document.querySelectorAll('.module-pane').forEach(p => p.classList.remove('active-pane'));
+        document.getElementById(`module-${mod}`).classList.add('active-pane');
+        document.getElementById('btn-back').style.display = 'inline-block';
+        document.getElementById('navTitle').textContent = moduleInfo[mod]?.title || '';
+        loadInputs(mod);
+        _skipRecord = true;
+        if (mod === 'transfect') renderTransfectionGroups();
+        if (mod === 'recomb') renderFragments();
+        if (mod === 'cell') updateCellCalc();
+        if (mod === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
+        setTimeout(() => { _skipRecord = false; }, 100);
+    }
+
+    function goHome() {
+        document.querySelectorAll('.module-pane').forEach(p => p.classList.remove('active-pane'));
+        document.getElementById('module-home').classList.add('active-pane');
+        document.getElementById('btn-back').style.display = 'none';
+        document.getElementById('navTitle').textContent = '';
+    }
+
+    document.getElementById('btn-back').addEventListener('click', goHome);
 
     // --- 输入记忆（持久化） ---
     let lastInputs = JSON.parse(localStorage.getItem('labsuite_inputs') || '{}');
@@ -1400,19 +1422,14 @@
             renderModalHistory();
         });
 
+        // 渲染首页
+        renderHomeGrid();
         // 加载上次输入值
         ['cell','recomb','plating','transfect','solution','pcr','titer','moi'].forEach(k => loadInputs(k));
-        // 首次初始化运行（不记录历史）
+        // 首次初始化
         _skipRecord = true;
-        updateCellCalc();
-        renderFragments();
-        updatePlating();
-        renderTransfectionGroups();
-        updateSolution();
-        updatePCR();
-        updateDilutionScheme();
-        updateTiter();
-        updateMOI();
+        updateCellCalc(); updatePlating(); updateSolution(); updatePCR();
+        updateDilutionScheme(); updateTiter(); updateMOI();
         clearTimeout(debounceTimers["cell"]);
         setTimeout(() => { _skipRecord = false; }, 500);
     }
