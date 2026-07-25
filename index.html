@@ -54,12 +54,12 @@
 
         /* 导航 Tab */
         .nav-tabs {
-            display: flex;
-            flex-wrap: wrap;
+            display: flex; flex-wrap: wrap;
             background: #f8f9f7;
             border-bottom: 1px solid var(--border-color);
-            padding: 6px 10px;
-            gap: 2px;
+            padding: 6px 10px; gap: 2px;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .tab-btn {
@@ -118,11 +118,9 @@
         .input-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 14px;
-            margin-bottom: 16px;
-            background: #f9faf9;
-            padding: 18px;
-            border-radius: var(--radius-md);
+            gap: 16px; margin-bottom: 16px;
+            background: linear-gradient(135deg, #fafcfa 0%, #f6f9f6 100%);
+            padding: 20px; border-radius: var(--radius-md);
             border: 1px solid var(--border-color);
         }
 
@@ -149,7 +147,7 @@
         }
         .input-field input:focus, .input-field select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+            box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.15);
         }
 
         /* 结果展示面板 */
@@ -186,12 +184,9 @@
         }
 
         .formula-line {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;
+            padding: 8px 12px; background: #f9faf9; border-radius: 6px;
+            border-left: 3px solid var(--accent);
         }
         .note {
             font-size: 0.8rem;
@@ -234,11 +229,9 @@
 
         /* 卡片式输入（多片段 / 转染） */
         .card-item {
-            background: #fafafa;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 12px;
+            background: #fdfdfb; border: 1px solid var(--border-color);
+            border-left: 3px solid var(--accent);
+            border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 12px;
         }
         .card-item-title {
             font-size: 0.85rem;
@@ -303,7 +296,7 @@
             transition: all 0.15s ease;
         }
         .hist-card:hover {
-            background: #e0f2fe;
+            background: var(--primary-light);
             border-color: var(--primary);
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
@@ -1133,14 +1126,10 @@
 
     function updateTransfection() {
         let peiRatio = parseFloat(document.getElementById('pei_ratio').value) || 2.5;
-        let html = `<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">← 左右滑动查看 →</div><div class="table-wrapper"><table class="lab-table"><thead><tr><th>组</th>`;
-        for (let p = 1; p <= currentPlasmidCount; p++) html += `<th>P${p}(μL)</th>`;
-        html += `<th>总DNA(μg)</th><th>PEI(μL)</th></tr></thead><tbody>`;
-
-        let outputs = {};
+        // 转置表格：行=参数，列=组（竖排适配手机）
+        let tableData = {};
         for (let g = 1; g <= currentGroupCount; g++) {
-            let totalMass = 0;
-            let vols = [];
+            let totalMass = 0, vols = [];
             for (let p = 1; p <= currentPlasmidCount; p++) {
                 let mass = parseFloat(document.getElementById(`g${g}_p${p}_mass`)?.value) || 0;
                 let conc = parseFloat(document.getElementById(`g${g}_p${p}_conc`)?.value) || 1;
@@ -1148,12 +1137,27 @@
                 vols.push((mass * 1000) / conc);
             }
             let peiVol = totalMass * peiRatio;
-            html += `<tr><td style="font-weight:600;">${g}</td>`;
-            vols.forEach(v => html += `<td>${v.toFixed(2)}</td>`);
-            html += `<td>${totalMass.toFixed(2)}</td><td style="color:var(--primary-dark); font-weight:bold;">${peiVol.toFixed(2)}</td></tr>`;
-            outputs[`组${g}`] = `DNA: ${totalMass.toFixed(2)} μg | PEI: ${peiVol.toFixed(2)} μL`;
+            tableData[g] = { vols, totalMass: totalMass.toFixed(2), peiVol: peiVol.toFixed(2) };
         }
-        html += `</tbody></table></div>`;
+
+        let html = `<div class="table-wrapper"><table class="lab-table"><thead><tr><th>参数</th>`;
+        for (let g = 1; g <= currentGroupCount; g++) html += `<th>组 ${g}</th>`;
+        html += `</tr></thead><tbody>`;
+        for (let p = 1; p <= currentPlasmidCount; p++) {
+            html += `<tr><td style="font-weight:600;">P${p} (μL)</td>`;
+            for (let g = 1; g <= currentGroupCount; g++) html += `<td>${tableData[g].vols[p-1].toFixed(2)}</td>`;
+            html += `</tr>`;
+        }
+        html += `<tr><td style="font-weight:600;">总DNA (μg)</td>`;
+        for (let g = 1; g <= currentGroupCount; g++) html += `<td>${tableData[g].totalMass}</td>`;
+        html += `</tr><tr><td style="font-weight:600; color:var(--primary-dark);">PEI (μL)</td>`;
+        for (let g = 1; g <= currentGroupCount; g++) html += `<td style="font-weight:bold; color:var(--primary-dark);">${tableData[g].peiVol}</td>`;
+        html += `</tr></tbody></table></div>`;
+
+        let outputs = {};
+        for (let g = 1; g <= currentGroupCount; g++) {
+            outputs[`组${g}`] = `DNA: ${tableData[g].totalMass} μg | PEI: ${tableData[g].peiVol} μL`;
+        }
         html += `<div class="formula-line">公式：质粒体积 (μL) = (质量 μg × 1000) / 浓度(ng/μL)  |  PEI (μL) = 总DNA (μg) × PEI/DNA 比值</div>`;
         document.getElementById('transfectionResult').innerHTML = html;
         debounceRecord("transfect", () => { recordHistory('transfect', { "组数": currentGroupCount }, outputs, {
