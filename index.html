@@ -456,9 +456,6 @@
     <div id="module-recomb" class="module-pane">
         <div class="section-title">多片段同源重组计算</div>
         <div class="input-grid">
-            <div class="input-field"><label>载体长度（bp）</label><input type="number" id="hr_vector_bp" value="12000"></div>
-            <div class="input-field"><label>载体浓度（ng/μL）</label><input type="number" id="hr_vector_conc" value="1000"></div>
-            <div class="input-field"><label>载体加入质量（ng）</label><input type="number" id="hr_vector_mass" value="100"></div>
             <div class="input-field"><label>插入片段数量</label>
                 <select id="fragment_count">
                     <option value="1">1 个片段</option>
@@ -466,6 +463,15 @@
                     <option value="3" selected>3 个片段</option>
                     <option value="4">4 个片段</option>
                     <option value="5">5 个片段</option>
+                </select>
+            </div>
+            <div class="input-field"><label>实验组数</label>
+                <select id="hr_group_count">
+                    <option value="1" selected>1 组</option>
+                    <option value="2">2 组</option>
+                    <option value="3">3 组</option>
+                    <option value="4">4 组</option>
+                    <option value="5">5 组</option>
                 </select>
             </div>
         </div>
