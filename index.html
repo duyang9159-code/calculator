@@ -1109,25 +1109,25 @@
 
     const FRAG_DEFAULTS = { bp: [2000,1500,800,600,400], conc: [500,400,300,250,200], ratio: 2 };
     const HR_VECTOR_DEFAULTS = { bp: 12000, conc: 1000, mass: 100 };
+    let hrSavedValues = {};
 
     function renderFragments() {
         let count = parseInt(document.getElementById('fragment_count').value) || 3;
         let gCount = parseInt(document.getElementById('hr_group_count').value) || 1;
-        // Save current values before re-rendering
-        let saved = {};
+        // Save current values into persistent cache before re-rendering
         for (let g = 1; g <= 5; g++) {
-            saved[g] = { vector: {}, frags: [] };
+            if (!hrSavedValues[g]) hrSavedValues[g] = { vector: {}, frags: [] };
             ['bp','conc','mass'].forEach(s => {
                 const el = document.getElementById(`hrg${g}_vector_${s}`);
-                if (el) saved[g].vector[s] = el.value;
+                if (el) hrSavedValues[g].vector[s] = el.value;
             });
             for (let i = 1; i <= 5; i++) {
-                const row = {};
+                const row = hrSavedValues[g].frags[i-1] || {};
                 ['bp','conc','ratio'].forEach(s => {
                     const el = document.getElementById(`hrg${g}_frag${i}_${s}`);
                     if (el) row[s] = el.value;
                 });
-                saved[g].frags.push(row);
+                hrSavedValues[g].frags[i-1] = row;
             }
         }
         currentFragmentCount = count;
@@ -1137,7 +1137,7 @@
         for (let g = 1; g <= gCount; g++) {
             const groupDiv = document.createElement('div');
             groupDiv.className = 'card-item';
-            const vec = saved[g].vector;
+            const vec = hrSavedValues[g].vector;
             let html = `<div class="card-item-title">实验组 ${g}</div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">
                     <div class="input-field"><label>载体长度（bp）</label><input type="number" id="hrg${g}_vector_bp" value="${vec.bp || HR_VECTOR_DEFAULTS.bp}"></div>
@@ -1146,7 +1146,7 @@
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:10px;">`;
             for (let i = 1; i <= count; i++) {
-                const row = saved[g].frags[i-1] || {};
+                const row = hrSavedValues[g].frags[i-1] || {};
                 html += `
                     <div class="input-field"><label>片段 ${i} 长度（bp）</label><input type="number" id="hrg${g}_frag${i}_bp" value="${row.bp || FRAG_DEFAULTS.bp[i-1] || 500}"></div>
                     <div class="input-field"><label>片段 ${i} 浓度（ng/μL）</label><input type="number" id="hrg${g}_frag${i}_conc" value="${row.conc || FRAG_DEFAULTS.conc[i-1] || 100}"></div>
