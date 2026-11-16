@@ -1055,13 +1055,13 @@
 
         let html = `
             <div class="result-badge"><label>当前细胞浓度</label><div class="val">${currentConc.toFixed(3)} <span style="font-size:0.8rem">×10⁶ 个/mL</span></div></div>
-            <div class="result-badge"><label>悬液总细胞量</label><div class="val">${totalCells.toFixed(2)} <span style="font-size:0.8rem">×10⁶ 个</span></div></div>
+            <div class="result-badge"><label>悬液总细胞量</label><div class="val">${toSciSup(totalCells * 1e6)} <span style="font-size:0.8rem">个</span></div></div>
         `;
 
         let inputs = mode === 'known'
             ? { "已知浓度": `${currentConc}`, "体积": `${curVol} mL` }
             : { "4格总数": total, "稀释": dilution, "体积": `${curVol} mL` };
-        let outputs = { "浓度": `${currentConc.toFixed(3)}x10^6 个/mL`, "总量": `${totalCells.toFixed(2)}x10^6 个` };
+        let outputs = { "浓度": `${currentConc.toFixed(3)}x10^6 个/mL`, "总量": `${toSciText(totalCells * 1e6)} 个` };
 
         if (mode === 'adjust' || mode === 'known') {
             let targetConc = parseFloat(document.getElementById('cell_target_conc').value) || 0;
@@ -1445,6 +1445,13 @@
         const exp = Math.floor(Math.log10(Math.abs(num)));
         const mant = num / Math.pow(10, exp);
         return `${mant.toFixed(2)} × 10<sup>${exp}</sup>`;
+    }
+
+    function toSciText(num) {
+        if (num === 0) return '0';
+        const exp = Math.floor(Math.log10(Math.abs(num)));
+        const mant = num / Math.pow(10, exp);
+        return `${mant.toFixed(2)}x10^${exp}`;
     }
 
     function updateDilutionScheme() {
