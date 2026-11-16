@@ -1167,32 +1167,55 @@
     }
 
     function updateMultiFragment() {
-        let vecBp = parseFloat(document.getElementById('hr_vector_bp').value) || 1;
-        let vecConc = parseFloat(document.getElementById('hr_vector_conc').value) || 1;
-        let vecMass = parseFloat(document.getElementById('hr_vector_mass').value) || 0;
-        let vecVol = vecMass / vecConc;
-
-        let html = `<div class="result-badge"><label>载体所需体积</label><div class="val">${vecVol.toFixed(2)} <span style="font-size:0.8rem">μL</span></div></div>`;
-        let inputs = { "载体": `${vecBp} bp` };
-        let outputs = { "载体体积": `${vecVol.toFixed(2)} μL` };
-
-        for (let i = 1; i <= currentFragmentCount; i++) {
-            let bp = parseFloat(document.getElementById(`frag${i}_bp`)?.value) || 1;
-            let conc = parseFloat(document.getElementById(`frag${i}_conc`)?.value) || 1;
-            let ratio = parseFloat(document.getElementById(`frag${i}_ratio`)?.value) || 1;
-            let reqMass = (vecMass / vecBp) * ratio * bp;
-            let reqVol = reqMass / conc;
-            html += `<div class="result-badge"><label>片段 ${i} 体积 (${reqMass.toFixed(1)} ng)</label><div class="val" style="color:var(--accent);">${reqVol.toFixed(2)} <span style="font-size:0.8rem">μL</span></div></div>`;
-            outputs[`片段${i}`] = `${reqVol.toFixed(2)} μL`;
+        let html = `<div class="table-wrapper"><table class="lab-table"><thead><tr><th>组分</th>`;
+        for (let g = 1; g <= currentHrGroupCount; g++) html += `<th>组 ${g}</th>`;
+        html += `</tr></thead><tbody>`;
+        html += `<tr><td style="font-weight:600;">载体体积</td>`;
+        for (let g = 1; g <= currentHrGroupCount; g++) {
+            let vecConc = parseFloat(document.getElementById(`hrg${g}_vector_conc`)?.value) || 1;
+            let vecMass = parseFloat(document.getElementById(`hrg${g}_vector_mass`)?.value) || 0;
+            html += `<td>${(vecMass / vecConc).toFixed(2)} μL</td>`;
         }
-
+        html += `</tr>`;
+        for (let i = 1; i <= currentFragmentCount; i++) {
+            html += `<tr><td style="font-weight:600;">片段 ${i}</td>`;
+            for (let g = 1; g <= currentHrGroupCount; g++) {
+                let vecBp = parseFloat(document.getElementById(`hrg${g}_vector_bp`)?.value) || 1;
+                let vecMass = parseFloat(document.getElementById(`hrg${g}_vector_mass`)?.value) || 0;
+                let bp = parseFloat(document.getElementById(`hrg${g}_frag${i}_bp`)?.value) || 1;
+                let conc = parseFloat(document.getElementById(`hrg${g}_frag${i}_conc`)?.value) || 1;
+                let ratio = parseFloat(document.getElementById(`hrg${g}_frag${i}_ratio`)?.value) || 1;
+                let reqMass = (vecMass / vecBp) * ratio * bp;
+                let reqVol = reqMass / conc;
+                html += `<td>${reqVol.toFixed(2)} μL (${reqMass.toFixed(1)} ng)</td>`;
+            }
+            html += `</tr>`;
+        }
+        html += `</tbody></table></div>`;
         document.getElementById('multiFragmentResult').innerHTML = html;
-        debounceRecord("recomb", () => { recordHistory('recomb', { "载体": `${vecMass} ng / ${vecBp} bp`, "片段数": currentFragmentCount }, outputs, {
-            hr_vector_bp: document.getElementById('hr_vector_bp').value,
-            hr_vector_conc: document.getElementById('hr_vector_conc').value,
-            hr_vector_mass: document.getElementById('hr_vector_mass').value,
-            fragment_count: document.getElementById('fragment_count').value
+        debounceRecord("recomb", () => { recordHistory('recomb', { "片段数": currentFragmentCount, "组数": currentHrGroupCount }, buildHrOutputs(), {
+            fragment_count: document.getElementById('fragment_count').value,
+            hr_group_count: document.getElementById('hr_group_count').value
         }); });
+    }
+
+    function buildHrOutputs() {
+        let outputs = {};
+        for (let g = 1; g <= currentHrGroupCount; g++) {
+            let vecConc = parseFloat(document.getElementById(`hrg${g}_vector_conc`)?.value) || 1;
+            let vecMass = parseFloat(document.getElementById(`hrg${g}_vector_mass`)?.value) || 0;
+            let vecBp = parseFloat(document.getElementById(`hrg${g}_vector_bp`)?.value) || 1;
+            let parts = [`载体 ${(vecMass / vecConc).toFixed(2)} μL`];
+            for (let i = 1; i <= currentFragmentCount; i++) {
+                let bp = parseFloat(document.getElementById(`hrg${g}_frag${i}_bp`)?.value) || 1;
+                let conc = parseFloat(document.getElementById(`hrg${g}_frag${i}_conc`)?.value) || 1;
+                let ratio = parseFloat(document.getElementById(`hrg${g}_frag${i}_ratio`)?.value) || 1;
+                let reqMass = (vecMass / vecBp) * ratio * bp;
+                parts.push(`片段${i} ${(reqMass / conc).toFixed(2)} μL`);
+            }
+            outputs[`组${g}`] = parts.join(' | ');
+        }
+        return outputs;
     }
 
     // --- 3. 铺板计算 ---
