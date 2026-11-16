@@ -1515,8 +1515,8 @@
 
         bindInputs(['cell_total','cell_dilution','cell_vol','cell_target_conc','cell_need'], updateCellCalc);
         bindSelects(['cell_mode'], updateCellCalc);
-        bindInputs(['hr_vector_bp','hr_vector_conc','hr_vector_mass'], updateMultiFragment);
         document.getElementById('fragment_count').addEventListener('change', renderFragments);
+        document.getElementById('hr_group_count').addEventListener('change', renderFragments);
 
         bindInputs(['area_per_well','med_per_well','flask_area','flask_confluence','target_wells','seed_confluence','resuspend_vol'], updatePlating);
         document.getElementById('plate_type').addEventListener('change', (e) => {
