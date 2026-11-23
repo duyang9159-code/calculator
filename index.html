@@ -791,6 +791,7 @@
         navigateTo(realKey);
         // Restore field values after navigateTo has shown the pane
         setTimeout(() => {
+            if (realKey === 'titer') renderTiterTable();
             Object.entries(fields).forEach(([id, val]) => {
                 const el = document.getElementById(id);
                 if (el) { el.value = val; el.dispatchEvent(new Event('input', {bubbles:true})); }
@@ -801,7 +802,7 @@
             if (realKey === 'transfect') { renderTransfectionGroups(); setTimeout(updateTransfection, 200); }
             if (realKey === 'solution') updateSolution();
             if (realKey === 'pcr') updatePCR();
-            if (realKey === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
+            if (realKey === 'titer') { updateTiter(); updateMOI(); }
         }, 150);
     }
 
@@ -851,7 +852,7 @@
             document.getElementById('titer-sub-titer').classList.toggle('hidden-input', sub !== 'titer');
             document.getElementById('titer-sub-moi').classList.toggle('hidden-input', sub !== 'moi');
             _skipRecord = true;
-            if (sub === 'titer') { updateDilutionScheme(); updateTiter(); }
+            if (sub === 'titer') renderTiterTable();
             if (sub === 'moi') updateMOI();
             clearTimeout(debounceTimers["titer"]); clearTimeout(debounceTimers["moi"]);
             setTimeout(() => { _skipRecord = false; }, 200);
@@ -933,7 +934,7 @@
         if (mod === 'transfect') renderTransfectionGroups();
         if (mod === 'recomb') renderFragments();
         if (mod === 'cell') updateCellCalc();
-        if (mod === 'titer') { updateDilutionScheme(); updateTiter(); updateMOI(); }
+        if (mod === 'titer') { renderTiterTable(); updateMOI(); }
         setTimeout(() => { _skipRecord = false; }, 100);
     }
 
@@ -1609,10 +1610,7 @@
         bindSelects(['fold_vol_unit'], updateFold);
         bindInputs(['pcr_samples','pcr_sys','pcr_pol','pcr_fwd','pcr_rev','pcr_tpl'], updatePCR);
 
-        bindInputs(['titer_first_vol','titer_fluo_total','titer_repeats'], () => {
-            updateDilutionScheme(); updateTiter();
-        });
-        bindSelects(['titer_row_select'], () => { updateDilutionScheme(); updateTiter(); });
+        bindInputs(['titer_first_vol','titer_repeats','titer_inoc_vol'], updateTiter);
         bindInputs(['moi_cell_count','moi_value','moi_titer'], updateMOI);
 
         // 历史记录弹窗控制
@@ -1635,12 +1633,13 @@
 
         // 渲染首页
         renderHomeGrid();
-        // 加载上次输入值
+        // 先渲染动态表格,再恢复上次输入值(每排病变孔数才能持久化);置 _skipRecord 防止加载时误记历史
+        _skipRecord = true;
+        renderTiterTable();
         ['cell','recomb','plating','transfect','solution','pcr','titer','moi'].forEach(k => loadInputs(k));
         // 首次初始化
-        _skipRecord = true;
         updateCellCalc(); updatePlating(); updateSolution(); updatePCR();
-        updateDilutionScheme(); updateTiter(); updateMOI();
+        updateTiter(); updateMOI();
         clearTimeout(debounceTimers["cell"]);
         setTimeout(() => { _skipRecord = false; }, 500);
     }
