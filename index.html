@@ -1443,41 +1443,103 @@
         return `${mant.toFixed(2)}x10^${exp}`;
     }
 
-    function updateDilutionScheme() {
-        const firstVol = parseFloat(document.getElementById('titer_first_vol').value) || 0;
-        const rowCount = parseInt(document.getElementById('titer_row_select').value) || 1;
-        let html = `<table class="lab-table"><thead><tr><th>排数</th><th>稀释倍数</th><th>原液体积</th></tr></thead><tbody>`;
-        for (let i = 1; i <= rowCount; i++) {
-            const vol = firstVol / Math.pow(10, i - 1);
-            const exp = Math.floor(Math.log10(vol));
-            const mant = vol / Math.pow(10, exp);
-            html += `<tr><td>第 ${i} 排</td><td>10<sup>${i-1}</sup> 倍</td><td>${mant.toFixed(3)} × 10<sup>${exp}</sup> μL</td></tr>`;
+    const TITER_ROWS = 12;
+
+    function renderTiterTable() {
+        let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>病变孔数</th><th>病变率</th><th>该排滴度 (TU/mL)</th></tr></thead><tbody>`;
+        for (let r = 1; r <= TITER_ROWS; r++) {
+            html += `<tr>
+                <td>${r}</td>
+                <td>10<sup>${1-r}</sup></td>
+                <td><input type="number" id="titer_row_${r}_count" value="0" min="0" style="width:70px;"></td>
+                <td id="titer_row_${r}_rate">—</td>
+                <td id="titer_row_${r}_titer">—</td>
+            </tr>`;
         }
         html += `</tbody></table>`;
         document.getElementById('dilution_scheme').innerHTML = html;
+        for (let r = 1; r <= TITER_ROWS; r++) {
+            document.getElementById(`titer_row_${r}_count`).addEventListener('input', updateTiter);
+        }
+        updateTiter();
     }
 
     function updateTiter() {
         const firstVol = parseFloat(document.getElementById('titer_first_vol').value) || 0;
-        const row = parseInt(document.getElementById('titer_row_select').value) || 1;
-        const totalCount = parseFloat(document.getElementById('titer_fluo_total').value) || 0;
-        const repeats = parseFloat(document.getElementById('titer_repeats').value) || 1;
+        const repeats = parseInt(document.getElementById('titer_repeats').value) || 1;
+        const inocVol = parseFloat(document.getElementById('titer_inoc_vol').value) || 0;
 
-        const vol = firstVol / Math.pow(10, row - 1);
-        const avg = totalCount / repeats;
-        const titer = vol > 0 ? (avg * 1000) / vol : 0;
+        // 1) 每排读数、clamp 到 0..复孔数,并更新病变率与该排滴度
+        const counts = [];
+        for (let r = 1; r <= TITER_ROWS; r++) {
+            const el = document.getElementById(`titer_row_${r}_count`);
+            let v = parseInt(el?.value) || 0;
+            if (v < 0) v = 0;
+            if (v > repeats) v = repeats;
+            counts.push(v);
+            if (el && parseInt(el.value) !== v) el.value = v;
+            const pct = repeats > 0 ? (v / repeats) * 100 : 0;
+            const volUl = firstVol / Math.pow(10, r - 1);
+            const titer = volUl > 0 ? (v / repeats) / volUl * 1000 : 0;
+            document.getElementById(`titer_row_${r}_rate`).textContent = repeats > 0 ? pct.toFixed(0) + '%' : '—';
+            document.getElementById(`titer_row_${r}_titer`).innerHTML = (volUl > 0 && v > 0) ? toSciSup(titer) : '—';
+        }
 
-        document.getElementById('titerResult').innerHTML = `
-            <div class="result-badge"><label>平均空斑/荧光数</label><div class="val">${avg.toFixed(1)}</div></div>
-            <div class="result-badge"><label>计算滴度 (TU / mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(titer)}</div></div>
-            <div class="formula-line">公式：滴度 (TU/mL) = (平均阳性数 / 病毒原液体积 μL) × 1000</div>
+        // 2) TCID50 (Reed-Muench)
+        let tcid50Html = '', outputs = {};
+        const anyPositive = counts.some(c => c > 0);
+        if (!anyPositive) {
+            tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">未检出病变,建议提高病毒浓度或减少稀释</div></div>`;
+            outputs["TCID50"] = "未检出病变";
+        } else if (inocVol <= 0) {
+            tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">每孔接种体积需大于 0</div></div>`;
+            outputs["TCID50"] = "接种体积无效";
+        } else {
+            // 累计阳性:自最稀排向浓端累加;累计阴性:自最浓排向稀端累加
+            const cumPos = new Array(TITER_ROWS + 1).fill(0);
+            let acc = 0;
+            for (let r = TITER_ROWS; r >= 1; r--) { acc += counts[r - 1]; cumPos[r] = acc; }
+            const cumNeg = new Array(TITER_ROWS + 1).fill(0);
+            acc = 0;
+            for (let r = 1; r <= TITER_ROWS; r++) { cumNeg[r] = acc; acc += repeats - counts[r - 1]; }
+            // 上排 = 自最稀端起累计病变率 ≥50% 的第一排
+            let above = 0, below = 0;
+            for (let r = TITER_ROWS; r >= 1; r--) {
+                const total = cumPos[r] + cumNeg[r];
+                const pct = total > 0 ? (cumPos[r] / total) * 100 : 0;
+                if (pct >= 50) { above = r; below = r + 1; break; }
+            }
+            if (above === TITER_ROWS && below > TITER_ROWS) {
+                tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">终点超出最稀排,建议增加稀释梯度</div></div>`;
+                outputs["TCID50"] = "超出量程";
+            } else {
+                const pAbove = cumPos[above] / (cumPos[above] + cumNeg[above]) * 100;
+                const pBelow = cumPos[below] / (cumPos[below] + cumNeg[below]) * 100;
+                const pd = (pAbove - 50) / (pAbove - pBelow);
+                const e = (1 - above) - pd;
+                const log10PerMl = -e + Math.log10(1000 / inocVol);
+                const linPerMl = Math.pow(10, log10PerMl);
+                tcid50Html = `
+                    <div class="result-badge"><label>log₁₀(TCID50/mL)</label><div class="val" style="color:var(--primary-dark);">${log10PerMl.toFixed(2)}</div></div>
+                    <div class="result-badge"><label>TCID50 (个/mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(linPerMl)}</div></div>
+                    <div class="result-badge"><label>终点稀释度</label><div class="val">10<sup>${e.toFixed(2)}</sup> 稀释</div></div>
+                `;
+                outputs["TCID50"] = `log10=${log10PerMl.toFixed(2)} (${toSciText(linPerMl)}/mL)`;
+            }
+        }
+
+        document.getElementById('titerResult').innerHTML = tcid50Html + `
+            <div class="formula-line">Reed-Muench:累计病变率(自最稀排累计)≥50% 的最稀排为上排;PD=(上排%−50)/(上排%−下排%);终点指数=上排指数−PD;TCID50/mL=10^(−终点指数)×1000/接种体积。该排滴度按"每阳性孔至少 1 个感染单位"估算,精确滴度以 TCID50 为准。</div>
         `;
-        debounceRecord("titer", () => { recordHistory('titer', { "首孔体积": `${document.getElementById('titer_first_vol').value} μL`, "排数": `第${row}排`, "阳性总数": totalCount, "复孔": repeats }, { "滴度": `${toSciSup(titer)} TU/mL` }, {
-            titer_first_vol: document.getElementById('titer_first_vol').value,
-            titer_row_select: document.getElementById('titer_row_select').value,
-            titer_fluo_total: document.getElementById('titer_fluo_total').value,
-            titer_repeats: document.getElementById('titer_repeats').value
-        }); });
+        debounceRecord("titer", () => {
+            let fields = {
+                titer_first_vol: document.getElementById('titer_first_vol').value,
+                titer_repeats: document.getElementById('titer_repeats').value,
+                titer_inoc_vol: document.getElementById('titer_inoc_vol').value
+            };
+            for (let r = 1; r <= TITER_ROWS; r++) fields[`titer_row_${r}_count`] = counts[r - 1];
+            recordHistory('titer', { "首孔体积": `${firstVol} μL`, "复孔数": repeats, "接种体积": `${inocVol} μL` }, { "病变孔数": counts.join(','), ...outputs }, fields);
+        });
     }
 
     function updateMOI() {
