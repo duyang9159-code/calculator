@@ -1497,13 +1497,13 @@
             tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">每孔接种体积需大于 0</div></div>`;
             outputs["TCID50"] = "接种体积无效";
         } else {
-            // 累计阳性:自最稀排向浓端累加;累计阴性:自最浓排向稀端累加
+            // Reed-Muench 累计:阳性自最稀排向浓端累加(含本排);阴性自最浓排向稀端累加(含本排)
             const cumPos = new Array(TITER_ROWS + 1).fill(0);
             let acc = 0;
             for (let r = TITER_ROWS; r >= 1; r--) { acc += counts[r - 1]; cumPos[r] = acc; }
             const cumNeg = new Array(TITER_ROWS + 1).fill(0);
             acc = 0;
-            for (let r = 1; r <= TITER_ROWS; r++) { cumNeg[r] = acc; acc += repeats - counts[r - 1]; }
+            for (let r = 1; r <= TITER_ROWS; r++) { acc += repeats - counts[r - 1]; cumNeg[r] = acc; }
             // 上排 = 自最稀端起累计病变率 ≥50% 的第一排
             let above = 0, below = 0;
             for (let r = TITER_ROWS; r >= 1; r--) {
