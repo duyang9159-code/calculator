@@ -625,7 +625,7 @@
                 <div class="input-field"><label>每孔接种体积（μL）</label><input type="number" id="titer_inoc_vol" value="100" min="0.1" step="0.1"></div>
             </div>
             <div style="margin: 16px 0;">
-                <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">12 排梯度稀释(96 孔板每排 8 孔;每排填病变孔数)</p>
+                <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">12 排梯度稀释(96 孔板每排 8 孔;每排填该排所有复孔的病变细胞数合计,阳性孔数可不填)</p>
                 <div class="table-wrapper"><div id="dilution_scheme"></div></div>
             </div>
             <div class="result-panel" id="titerResult"></div>
@@ -703,9 +703,9 @@
         <div class="guide-card">
             <div class="guide-card-header">7. 病毒滴度与 MOI 计算</div>
             <ul>
-                <li><strong>输入：</strong>首孔病毒体积、每排复孔数、每孔接种体积，12 排（10⁰–10⁻¹¹ 十倍梯度）每排填病变孔数；MOI 部分输入细胞数、目标 MOI、病毒滴度。</li>
-                <li><strong>计算：</strong>该排滴度 (TU/mL) = (病变孔数 / 复孔数) ÷ 该排原液等效体积 (μL) × 1000（按每阳性孔至少 1 个感染单位估算）。<br>
-                TCID50（Reed-Muench）：累计病变率自最稀排向浓端累计，取 ≥50% 的最稀排为上排；PD = (上排% − 50) / (上排% − 下排%)；终点指数 = 上排指数 − PD；TCID50/mL = 10^(−终点指数) × 1000 / 接种体积。<br>
+                <li><strong>输入：</strong>首孔病毒体积、每排复孔数、每孔接种体积，12 排（10⁰–10⁻¹¹ 十倍梯度）每排填该排所有复孔的病变细胞数合计，阳性孔数选填；MOI 部分输入细胞数、目标 MOI、病毒滴度。</li>
+                <li><strong>计算：</strong>平均每孔病变细胞数 = 病变细胞数 ÷ 复孔数；该排滴度 (TU/mL) = 平均每孔病变细胞数 ÷ 该排原液等效体积 (μL) × 1000（按每病变细胞至少 1 个感染单位估算）。<br>
+                TCID50（Reed-Muench）：用各排阳性孔数计算；阳性孔数未填时，按"病变细胞数 ≥ 复孔数视为该排全阳性，否则全阴性"近似。累计病变率自最稀排向浓端累计，取 ≥50% 的最稀排为上排；PD = (上排% − 50) / (上排% − 下排%)；终点指数 = 上排指数 − PD；TCID50/mL = 10^(−终点指数) × 1000 / 接种体积。<br>
                 所需病毒体积 (μL) = (细胞数 × MOI / 滴度) × 1000。</li>
             </ul>
         </div>
@@ -1448,13 +1448,14 @@
     const TITER_ROWS = 12;
 
     function renderTiterTable() {
-        let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>病变孔数</th><th>病变率</th><th>该排滴度 (TU/mL)</th></tr></thead><tbody>`;
+        let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>病变细胞数</th><th>平均每孔病变细胞数</th><th>阳性孔数(可选)</th><th>该排滴度 (TU/mL)</th></tr></thead><tbody>`;
         for (let r = 1; r <= TITER_ROWS; r++) {
             html += `<tr>
                 <td>${r}</td>
                 <td>10<sup>${1-r}</sup></td>
                 <td><input type="number" id="titer_row_${r}_count" value="0" min="0" style="width:70px;"></td>
-                <td id="titer_row_${r}_rate">—</td>
+                <td id="titer_row_${r}_avg">—</td>
+                <td><input type="number" id="titer_row_${r}_pos" min="0" style="width:70px;" placeholder="可不填"></td>
                 <td id="titer_row_${r}_titer">—</td>
             </tr>`;
         }
@@ -1462,6 +1463,7 @@
         document.getElementById('dilution_scheme').innerHTML = html;
         for (let r = 1; r <= TITER_ROWS; r++) {
             document.getElementById(`titer_row_${r}_count`).addEventListener('input', updateTiter);
+            document.getElementById(`titer_row_${r}_pos`).addEventListener('input', updateTiter);
         }
         updateTiter();
     }
@@ -1471,39 +1473,53 @@
         const repeats = parseInt(document.getElementById('titer_repeats').value) || 1;
         const inocVol = parseFloat(document.getElementById('titer_inoc_vol').value) || 0;
 
-        // 1) 每排读数、clamp 到 0..复孔数,并更新病变率与该排滴度
+        // 1) 每排读数:病变细胞数(全排合计,可超过复孔数)+ 阳性孔数(可选,未填则按"病变细胞总数≥复孔数视为该排阳性"近似)
         const counts = [];
+        const posCounts = [];
         for (let r = 1; r <= TITER_ROWS; r++) {
             const el = document.getElementById(`titer_row_${r}_count`);
             let v = parseInt(el?.value) || 0;
             if (v < 0) v = 0;
-            if (v > repeats) v = repeats;
             counts.push(v);
             if (el && parseInt(el.value) !== v) el.value = v;
-            const pct = repeats > 0 ? (v / repeats) * 100 : 0;
+            const avg = repeats > 0 ? v / repeats : 0;
+            const posEl = document.getElementById(`titer_row_${r}_pos`);
+            let p;
+            if (posEl && posEl.value !== '') {
+                p = parseInt(posEl.value) || 0;
+                if (p < 0) p = 0;
+                if (p > repeats) p = repeats;
+                if (parseInt(posEl.value) !== p) posEl.value = p;
+            } else {
+                p = (v > 0 && v >= repeats) ? repeats : 0;
+            }
+            posCounts.push(p);
             const volUl = firstVol / Math.pow(10, r - 1);
-            const titer = volUl > 0 ? (v / repeats) / volUl * 1000 : 0;
-            document.getElementById(`titer_row_${r}_rate`).textContent = repeats > 0 ? pct.toFixed(0) + '%' : '—';
+            const titer = volUl > 0 ? avg / volUl * 1000 : 0;
+            document.getElementById(`titer_row_${r}_avg`).textContent = repeats > 0 ? avg.toFixed(1) : '—';
             document.getElementById(`titer_row_${r}_titer`).innerHTML = (volUl > 0 && v > 0) ? toSciSup(titer) : '—';
         }
 
         // 2) TCID50 (Reed-Muench)
         let tcid50Html = '', outputs = {};
-        const anyPositive = counts.some(c => c > 0);
-        if (!anyPositive) {
+        const anyCells = counts.some(c => c > 0);
+        if (!anyCells) {
             tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">未检出病变,建议提高病毒浓度或减少稀释</div></div>`;
             outputs["TCID50"] = "未检出病变";
         } else if (inocVol <= 0) {
             tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">每孔接种体积需大于 0</div></div>`;
             outputs["TCID50"] = "接种体积无效";
+        } else if (posCounts.every(p => p === 0)) {
+            tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">按当前判定无阳性排,建议填写阳性孔数或提高病毒浓度</div></div>`;
+            outputs["TCID50"] = "无阳性排";
         } else {
             // Reed-Muench 累计:阳性自最稀排向浓端累加(含本排);阴性自最浓排向稀端累加(含本排)
             const cumPos = new Array(TITER_ROWS + 1).fill(0);
             let acc = 0;
-            for (let r = TITER_ROWS; r >= 1; r--) { acc += counts[r - 1]; cumPos[r] = acc; }
+            for (let r = TITER_ROWS; r >= 1; r--) { acc += posCounts[r - 1]; cumPos[r] = acc; }
             const cumNeg = new Array(TITER_ROWS + 1).fill(0);
             acc = 0;
-            for (let r = 1; r <= TITER_ROWS; r++) { acc += repeats - counts[r - 1]; cumNeg[r] = acc; }
+            for (let r = 1; r <= TITER_ROWS; r++) { acc += repeats - posCounts[r - 1]; cumNeg[r] = acc; }
             // 上排 = 自最稀端起累计病变率 ≥50% 的第一排
             let above = 0, below = 0;
             for (let r = TITER_ROWS; r >= 1; r--) {
@@ -1516,7 +1532,8 @@
                 outputs["TCID50"] = "超出量程";
             } else {
                 const pAbove = cumPos[above] / (cumPos[above] + cumNeg[above]) * 100;
-                const pBelow = cumPos[below] / (cumPos[below] + cumNeg[below]) * 100;
+                const pBelowDen = cumPos[below] + cumNeg[below];
+                const pBelow = pBelowDen > 0 ? cumPos[below] / pBelowDen * 100 : 0;
                 const pd = (pAbove - 50) / (pAbove - pBelow);
                 const e = (1 - above) - pd;
                 const log10PerMl = -e + Math.log10(1000 / inocVol);
@@ -1539,8 +1556,11 @@
                 titer_repeats: document.getElementById('titer_repeats').value,
                 titer_inoc_vol: document.getElementById('titer_inoc_vol').value
             };
-            for (let r = 1; r <= TITER_ROWS; r++) fields[`titer_row_${r}_count`] = counts[r - 1];
-            recordHistory('titer', { "首孔体积": `${firstVol} μL`, "复孔数": repeats, "接种体积": `${inocVol} μL` }, { "病变孔数": counts.join(','), ...outputs }, fields);
+            for (let r = 1; r <= TITER_ROWS; r++) {
+                fields[`titer_row_${r}_count`] = counts[r - 1];
+                fields[`titer_row_${r}_pos`] = posCounts[r - 1];
+            }
+            recordHistory('titer', { "首孔体积": `${firstVol} μL`, "复孔数": repeats, "接种体积": `${inocVol} μL` }, { "病变细胞数": counts.join(','), "阳性孔数": posCounts.join(','), ...outputs }, fields);
         });
     }
 
