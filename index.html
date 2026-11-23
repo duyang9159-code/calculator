@@ -1453,7 +1453,7 @@
             html += `<tr>
                 <td>${r}</td>
                 <td>10<sup>${1-r}</sup></td>
-                <td><input type="number" id="titer_row_${r}_count" value="0" min="0" style="width:70px;"></td>
+                <td><input type="number" id="titer_row_${r}_count" min="0" style="width:70px;" placeholder="0"></td>
                 <td id="titer_row_${r}_avg">—</td>
                 <td><input type="number" id="titer_row_${r}_pos" min="0" style="width:70px;" placeholder="可不填"></td>
                 <td id="titer_row_${r}_titer">—</td>
@@ -1481,7 +1481,7 @@
             let v = parseInt(el?.value) || 0;
             if (v < 0) v = 0;
             counts.push(v);
-            if (el && parseInt(el.value) !== v) el.value = v;
+            if (el && el.value !== '' && parseInt(el.value) !== v) el.value = v;
             const avg = repeats > 0 ? v / repeats : 0;
             const posEl = document.getElementById(`titer_row_${r}_pos`);
             let p;
@@ -1557,8 +1557,8 @@
                 titer_inoc_vol: document.getElementById('titer_inoc_vol').value
             };
             for (let r = 1; r <= TITER_ROWS; r++) {
-                fields[`titer_row_${r}_count`] = counts[r - 1];
-                fields[`titer_row_${r}_pos`] = posCounts[r - 1];
+                fields[`titer_row_${r}_count`] = document.getElementById(`titer_row_${r}_count`).value;
+                fields[`titer_row_${r}_pos`] = document.getElementById(`titer_row_${r}_pos`).value;
             }
             recordHistory('titer', { "首孔体积": `${firstVol} μL`, "复孔数": repeats, "接种体积": `${inocVol} μL` }, { "病变细胞数": counts.join(','), "阳性孔数": posCounts.join(','), ...outputs }, fields);
         });
