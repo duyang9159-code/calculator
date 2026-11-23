@@ -703,8 +703,9 @@
         <div class="guide-card">
             <div class="guide-card-header">7. 病毒滴度与 MOI 计算</div>
             <ul>
-                <li><strong>输入：</strong>首排病毒原液体积、选定排数（10倍梯度）、该排阳性总数、复孔数；MOI 部分输入细胞数、目标 MOI、病毒滴度。</li>
-                <li><strong>计算：</strong>滴度 (TU/mL) = (平均阳性数 / 当前排原液体积 μL) × 1000。<br>
+                <li><strong>输入：</strong>首孔病毒体积、每排复孔数、每孔接种体积，12 排（10⁰–10⁻¹¹ 十倍梯度）每排填病变孔数；MOI 部分输入细胞数、目标 MOI、病毒滴度。</li>
+                <li><strong>计算：</strong>该排滴度 (TU/mL) = (病变孔数 / 复孔数) ÷ 该排原液等效体积 (μL) × 1000（按每阳性孔至少 1 个感染单位估算）。<br>
+                TCID50（Reed-Muench）：累计病变率自最稀排向浓端累计，取 ≥50% 的最稀排为上排；PD = (上排% − 50) / (上排% − 下排%)；终点指数 = 上排指数 − PD；TCID50/mL = 10^(−终点指数) × 1000 / 接种体积。<br>
                 所需病毒体积 (μL) = (细胞数 × MOI / 滴度) × 1000。</li>
             </ul>
         </div>
@@ -882,7 +883,7 @@
         transfect: { title: '转染复合物体系', desc: '多质粒多组别 PEI 转染计算', dot: '转' },
         solution: { title: '溶液配制', desc: '浓度稀释与倍数稀释', dot: '液' },
         pcr: { title: 'PCR Master Mix', desc: '预混液配制，模板单独分装', dot: '预' },
-        titer: { title: '病毒滴度与 MOI', desc: '梯度稀释滴度计算与感染用量', dot: '毒' },
+        titer: { title: '病毒滴度与 MOI', desc: '梯度稀释滴度 / TCID50 与感染用量', dot: '毒' },
         guide: { title: '使用说明', desc: '各模块输入参数与计算公式', dot: '?' }
     };
 
