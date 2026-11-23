@@ -621,22 +621,11 @@
         <div id="titer-sub-titer">
             <div class="input-grid">
                 <div class="input-field"><label>首孔病毒体积（μL）</label><input type="number" id="titer_first_vol" value="10"></div>
-                <div class="input-field"><label>计算目标排数 (10倍梯度稀释)</label>
-                    <select id="titer_row_select">
-                        <option value="1">第 1 排 (10⁰)</option>
-                        <option value="2">第 2 排 (10¹)</option>
-                        <option value="3">第 3 排 (10²)</option>
-                        <option value="4">第 4 排 (10³)</option>
-                        <option value="5" selected>第 5 排 (10⁴)</option>
-                        <option value="6">第 6 排 (10⁵)</option>
-                        <option value="7">第 7 排 (10⁶)</option>
-                    </select>
-                </div>
-                <div class="input-field"><label>该排病变/阳性数总和</label><input type="number" id="titer_fluo_total" value="21"></div>
-                <div class="input-field"><label>复孔/重复组数</label><input type="number" id="titer_repeats" value="3" min="1"></div>
+                <div class="input-field"><label>每排复孔数</label><input type="number" id="titer_repeats" value="3" min="1" max="8"></div>
+                <div class="input-field"><label>每孔接种体积（μL）</label><input type="number" id="titer_inoc_vol" value="100" min="0.1" step="0.1"></div>
             </div>
             <div style="margin: 16px 0;">
-                <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">梯度稀释预览</p>
+                <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">12 排梯度稀释(96 孔板每排 8 孔;每排填病变孔数)</p>
                 <div class="table-wrapper"><div id="dilution_scheme"></div></div>
             </div>
             <div class="result-panel" id="titerResult"></div>
