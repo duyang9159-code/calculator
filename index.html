@@ -620,12 +620,13 @@
 
         <div id="titer-sub-titer">
             <div class="input-grid">
+                <div class="input-field"><label>计算方法</label><select id="titer_method"><option value="tcid50" selected>TCID50（Reed–Muench）</option><option value="tu">TU（病变细胞计数）</option></select></div>
                 <div class="input-field"><label>首孔病毒体积（μL）</label><input type="number" id="titer_first_vol" value="10"></div>
                 <div class="input-field"><label>每排复孔数</label><input type="number" id="titer_repeats" value="3" min="1" max="8"></div>
                 <div class="input-field"><label>每孔接种体积（μL）</label><input type="number" id="titer_inoc_vol" value="100" min="0.1" step="0.1"></div>
             </div>
             <div style="margin: 16px 0;">
-                <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">12 排梯度稀释(96 孔板每排 8 孔;每排填该排所有复孔的病变细胞数合计,阳性孔数可不填)</p>
+                <p id="titer_table_hint" style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">12 排梯度稀释。TCID50 填阳性孔数，TU 填每排病变细胞总数</p>
                 <div class="table-wrapper"><div id="dilution_scheme"></div></div>
             </div>
             <div class="result-panel" id="titerResult"></div>
@@ -1448,7 +1449,7 @@
     const TITER_ROWS = 12;
 
     function renderTiterTable() {
-        let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>病变细胞数</th><th>平均每孔病变细胞数</th><th>阳性孔数(可选)</th><th>该排滴度 (TU/mL)</th></tr></thead><tbody>`;
+        let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>病变细胞数</th><th>平均每孔病变细胞数</th><th>阳性孔数(可选)</th><th id="titer_value_header">该排 TU/mL</th></tr></thead><tbody>`;
         for (let r = 1; r <= TITER_ROWS; r++) {
             html += `<tr>
                 <td>${r}</td>
@@ -1469,101 +1470,100 @@
     }
 
     function updateTiter() {
+        const method = document.getElementById('titer_method')?.value || 'tcid50';
         const firstVol = parseFloat(document.getElementById('titer_first_vol').value) || 0;
-        const repeats = parseInt(document.getElementById('titer_repeats').value) || 1;
+        const repeats = Math.min(8, Math.max(1, parseInt(document.getElementById('titer_repeats').value) || 1));
         const inocVol = parseFloat(document.getElementById('titer_inoc_vol').value) || 0;
+        const counts = [], posCounts = [], rowTiters = [];
 
-        // 1) 每排读数:病变细胞数(全排合计,可超过复孔数)+ 阳性孔数(可选,未填则按"病变细胞总数≥复孔数视为该排阳性"近似)
-        const counts = [];
-        const posCounts = [];
+        document.getElementById('titer_value_header').textContent = method === 'tu' ? '该排 TU/mL' : '该排参考 TU/mL';
+        document.getElementById('titer_table_hint').textContent = method === 'tu'
+            ? '12 排梯度稀释。每排填写所有复孔的病变细胞总数，按 TU 标准公式换算'
+            : '12 排梯度稀释。每排填写阳性孔数，按 Reed–Muench 法计算 TCID50。病变细胞数可用于参考 TU';
+
         for (let r = 1; r <= TITER_ROWS; r++) {
-            const el = document.getElementById(`titer_row_${r}_count`);
-            let v = parseInt(el?.value) || 0;
-            if (v < 0) v = 0;
-            counts.push(v);
-            if (el && el.value !== '' && parseInt(el.value) !== v) el.value = v;
-            const avg = repeats > 0 ? v / repeats : 0;
+            const countEl = document.getElementById(`titer_row_${r}_count`);
+            let count = Math.max(0, parseInt(countEl?.value) || 0);
+            if (countEl && countEl.value !== '' && parseInt(countEl.value) !== count) countEl.value = count;
+            const avg = repeats > 0 ? count / repeats : 0;
             const posEl = document.getElementById(`titer_row_${r}_pos`);
-            let p;
-            if (posEl && posEl.value !== '') {
-                p = parseInt(posEl.value) || 0;
-                if (p < 0) p = 0;
-                if (p > repeats) p = repeats;
-                if (parseInt(posEl.value) !== p) posEl.value = p;
-            } else {
-                p = (v > 0 && v >= repeats) ? repeats : 0;
-            }
-            posCounts.push(p);
+            let pos = posEl?.value === '' ? null : Math.min(repeats, Math.max(0, parseInt(posEl?.value) || 0));
+            if (pos !== null && parseInt(posEl.value) !== pos) posEl.value = pos;
             const volUl = firstVol / Math.pow(10, r - 1);
-            const titer = volUl > 0 ? avg / volUl * 1000 : 0;
+            const tu = volUl > 0 ? avg / volUl * 1000 : 0;
+            counts.push(count);
+            posCounts.push(pos);
+            rowTiters.push(tu);
             document.getElementById(`titer_row_${r}_avg`).textContent = repeats > 0 ? avg.toFixed(1) : '—';
-            document.getElementById(`titer_row_${r}_titer`).innerHTML = (volUl > 0 && v > 0) ? toSciSup(titer) : '—';
+            document.getElementById(`titer_row_${r}_titer`).innerHTML = volUl > 0 && count > 0 ? toSciSup(tu) : '—';
         }
 
-        // 2) TCID50 (Reed-Muench)
-        let tcid50Html = '', outputs = {};
-        const anyCells = counts.some(c => c > 0);
-        if (!anyCells) {
-            tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">未检出病变,建议提高病毒浓度或减少稀释</div></div>`;
-            outputs["TCID50"] = "未检出病变";
-        } else if (inocVol <= 0) {
-            tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">每孔接种体积需大于 0</div></div>`;
-            outputs["TCID50"] = "接种体积无效";
-        } else if (posCounts.every(p => p === 0)) {
-            tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">按当前判定无阳性排,建议填写阳性孔数或提高病毒浓度</div></div>`;
-            outputs["TCID50"] = "无阳性排";
+        let html = '';
+        const outputs = {};
+        if (method === 'tu') {
+            const valid = rowTiters.filter((value, index) => counts[index] > 0 && Number.isFinite(value));
+            html = valid.length
+                ? `<div class="result-badge"><label>TU 计算结果</label><div class="val" style="color:var(--primary-dark);">各排 TU/mL 已列于上表</div></div><div class="formula-line">TU/mL =（该排病变细胞总数 ÷ 复孔数）÷ 该排病毒等效体积（μL）× 1000。每一排代表一个稀释度，请结合实验室规定的可计数范围选用对应排。</div>`
+                : `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TU</label><div class="val" style="color:#d97706; font-size:1rem;">请填写至少一排病变细胞数</div></div>`;
+            outputs['TU'] = valid.length ? '各排结果见表格' : '暂无有效数据';
         } else {
-            // Reed-Muench 累计:阳性自最稀排向浓端累加(含本排);阴性自最浓排向稀端累加(含本排)
-            const cumPos = new Array(TITER_ROWS + 1).fill(0);
-            let acc = 0;
-            for (let r = TITER_ROWS; r >= 1; r--) { acc += posCounts[r - 1]; cumPos[r] = acc; }
-            const cumNeg = new Array(TITER_ROWS + 1).fill(0);
-            acc = 0;
-            for (let r = 1; r <= TITER_ROWS; r++) { acc += repeats - posCounts[r - 1]; cumNeg[r] = acc; }
-            // 上排 = 自最稀端起累计病变率 ≥50% 的第一排
-            let above = 0, below = 0;
-            for (let r = TITER_ROWS; r >= 1; r--) {
-                const total = cumPos[r] + cumNeg[r];
-                const pct = total > 0 ? (cumPos[r] / total) * 100 : 0;
-                if (pct >= 50) { above = r; below = r + 1; break; }
-            }
-            if (above === TITER_ROWS && below > TITER_ROWS) {
-                tcid50Html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">终点超出最稀排,建议增加稀释梯度</div></div>`;
-                outputs["TCID50"] = "超出量程";
+            const effectivePos = posCounts.map((value, index) => value === null ? ((counts[index] > 0 && counts[index] >= repeats) ? repeats : 0) : value);
+            const anyCells = counts.some(c => c > 0);
+            const positiveRows = effectivePos.some(p => p > 0);
+            if (!anyCells) {
+                html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">未检出病变,建议提高病毒浓度或减少稀释</div></div>`;
+                outputs['TCID50'] = '未检出病变';
+            } else if (inocVol <= 0) {
+                html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">每孔接种体积需大于 0</div></div>`;
+                outputs['TCID50'] = '接种体积无效';
+            } else if (!positiveRows) {
+                html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">按当前阳性孔数无法确定终点</div></div>`;
+                outputs['TCID50'] = '无法确定终点';
             } else {
-                const pAbove = cumPos[above] / (cumPos[above] + cumNeg[above]) * 100;
-                const pBelowDen = cumPos[below] + cumNeg[below];
-                const pBelow = pBelowDen > 0 ? cumPos[below] / pBelowDen * 100 : 0;
-                const pd = (pAbove - 50) / (pAbove - pBelow);
-                const e = (1 - above) - pd;
-                const log10PerMl = -e + Math.log10(1000 / inocVol);
-                const linPerMl = Math.pow(10, log10PerMl);
-                tcid50Html = `
-                    <div class="result-badge"><label>log₁₀(TCID50/mL)</label><div class="val" style="color:var(--primary-dark);">${log10PerMl.toFixed(2)}</div></div>
-                    <div class="result-badge"><label>TCID50 (个/mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(linPerMl)}</div></div>
-                    <div class="result-badge"><label>终点稀释度</label><div class="val">10<sup>${e.toFixed(2)}</sup> 稀释</div></div>
-                `;
-                outputs["TCID50"] = `log10=${log10PerMl.toFixed(2)} (${toSciText(linPerMl)}/mL)`;
+                const cumPos = new Array(TITER_ROWS + 1).fill(0);
+                let acc = 0;
+                for (let r = TITER_ROWS; r >= 1; r--) { acc += effectivePos[r - 1]; cumPos[r] = acc; }
+                const cumNeg = new Array(TITER_ROWS + 1).fill(0);
+                acc = 0;
+                for (let r = 1; r <= TITER_ROWS; r++) { acc += repeats - effectivePos[r - 1]; cumNeg[r] = acc; }
+                let above = 0, below = 0;
+                for (let r = TITER_ROWS; r >= 1; r--) {
+                    const total = cumPos[r] + cumNeg[r];
+                    if (total > 0 && cumPos[r] / total * 100 >= 50) { above = r; below = r + 1; break; }
+                }
+                if (above === TITER_ROWS && below > TITER_ROWS) {
+                    html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">终点超出最稀排,建议增加稀释梯度</div></div>`;
+                    outputs['TCID50'] = '超出量程';
+                } else if (above === 0 || below > TITER_ROWS) {
+                    html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">当前数据无法找到 50% 终点</div></div>`;
+                    outputs['TCID50'] = '无法确定终点';
+                } else {
+                    const pAboveDen = cumPos[above] + cumNeg[above];
+                    const pBelowDen = cumPos[below] + cumNeg[below];
+                    const pAbove = pAboveDen > 0 ? cumPos[above] / pAboveDen * 100 : 0;
+                    const pBelow = pBelowDen > 0 ? cumPos[below] / pBelowDen * 100 : 0;
+                    const denominator = pAbove - pBelow;
+                    if (denominator === 0 || !Number.isFinite(denominator)) {
+                        html = `<div class="result-badge"><label>TCID50</label><div class="val">当前数据无法插值</div></div>`;
+                        outputs['TCID50'] = '无法插值';
+                    } else {
+                        const pd = (pAbove - 50) / denominator;
+                        const endpoint = (1 - above) - pd;
+                        const log10PerMl = -endpoint + Math.log10(1000 / inocVol);
+                        const linear = Math.pow(10, log10PerMl);
+                        html = `<div class="result-badge"><label>log₁₀(TCID50/mL)</label><div class="val" style="color:var(--primary-dark);">${log10PerMl.toFixed(2)}</div></div><div class="result-badge"><label>TCID50 (个/mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(linear)}</div></div><div class="result-badge"><label>终点稀释度</label><div class="val">10<sup>${endpoint.toFixed(2)}</sup> 稀释</div></div><div class="formula-line">Reed–Muench 法。优先使用阳性孔数列，未填写的排按病变细胞总数与复孔数作近似判定。</div>`;
+                        outputs['TCID50'] = `log10=${log10PerMl.toFixed(2)} (${toSciText(linear)}/mL)`;
+                    }
+                }
             }
         }
-
-        document.getElementById('titerResult').innerHTML = tcid50Html + `
-            <div class="formula-line">Reed-Muench:累计病变率(自最稀排累计)≥50% 的最稀排为上排;PD=(上排%−50)/(上排%−下排%);终点指数=上排指数−PD;TCID50/mL=10^(−终点指数)×1000/接种体积。该排滴度按"每阳性孔至少 1 个感染单位"估算,精确滴度以 TCID50 为准。</div>
-        `;
-        debounceRecord("titer", () => {
-            let fields = {
-                titer_first_vol: document.getElementById('titer_first_vol').value,
-                titer_repeats: document.getElementById('titer_repeats').value,
-                titer_inoc_vol: document.getElementById('titer_inoc_vol').value
-            };
-            for (let r = 1; r <= TITER_ROWS; r++) {
-                fields[`titer_row_${r}_count`] = document.getElementById(`titer_row_${r}_count`).value;
-                fields[`titer_row_${r}_pos`] = document.getElementById(`titer_row_${r}_pos`).value;
-            }
-            recordHistory('titer', { "首孔体积": `${firstVol} μL`, "复孔数": repeats, "接种体积": `${inocVol} μL` }, { "病变细胞数": counts.join(','), "阳性孔数": posCounts.join(','), ...outputs }, fields);
+        document.getElementById('titerResult').innerHTML = html;
+        debounceRecord('titer', () => {
+            const fields = { titer_method: method, titer_first_vol: document.getElementById('titer_first_vol').value, titer_repeats: document.getElementById('titer_repeats').value, titer_inoc_vol: document.getElementById('titer_inoc_vol').value };
+            for (let r = 1; r <= TITER_ROWS; r++) { fields[`titer_row_${r}_count`] = document.getElementById(`titer_row_${r}_count`).value; fields[`titer_row_${r}_pos`] = document.getElementById(`titer_row_${r}_pos`).value; }
+            recordHistory('titer', { '计算方法': method === 'tu' ? 'TU' : 'TCID50', '首孔体积': `${firstVol} μL`, '复孔数': repeats, '接种体积': `${inocVol} μL` }, { '病变细胞数': counts.join(','), '阳性孔数': posCounts.map(v => v === null ? '' : v).join(','), ...outputs }, fields);
         });
     }
-
     function updateMOI() {
         let cells = (parseFloat(document.getElementById('moi_cell_count').value) || 0) * 1e5;
         let moi = parseFloat(document.getElementById('moi_value').value) || 0;
@@ -1632,6 +1632,7 @@
         bindInputs(['pcr_samples','pcr_sys','pcr_pol','pcr_fwd','pcr_rev','pcr_tpl'], updatePCR);
 
         bindInputs(['titer_first_vol','titer_repeats','titer_inoc_vol'], updateTiter);
+        bindSelects(['titer_method'], updateTiter);
         bindInputs(['moi_cell_count','moi_value','moi_titer'], updateMOI);
 
         // 历史记录弹窗控制
@@ -1669,3 +1670,5 @@
 </script>
 </body>
 </html>
+
+
