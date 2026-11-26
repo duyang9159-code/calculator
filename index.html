@@ -620,7 +620,7 @@
 
         <div id="titer-sub-titer">
             <div class="input-grid">
-                <div class="input-field"><label>计算方法</label><select id="titer_method"><option value="tcid50" selected>TCID50（Reed–Muench）</option><option value="tu">TU（病变细胞计数）</option></select></div>
+                <div class="input-field"><label>计算方法</label><select id="titer_method"><option value="tcid50" selected>TCID50（Reed–Muench）</option><option value="spearman">TCID50（Spearman-Kärber）</option><option value="tu">TU（病变细胞计数）</option></select></div>
                 <div class="input-field" id="titer_field_firstvol"><label>首孔病毒体积（μL）</label><input type="number" id="titer_first_vol" value="10"></div>
                 <div class="input-field"><label>每排复孔数</label><input type="number" id="titer_repeats" value="3" min="1" max="8"></div>
                 <div class="input-field" id="titer_field_inocvol"><label>每孔接种体积（μL）</label><input type="number" id="titer_inoc_vol" value="100" min="0.1" step="0.1"></div>
@@ -708,6 +708,7 @@
                 <li><strong>输入：</strong>选择计算方法：TCID50（Reed–Muench）只需填 50% 端点附近的连续几排阳性孔数（未填的更浓排视为全阳性、更稀排视为全阴性），另填每排复孔数、每孔接种体积；TU（病变细胞计数）填首孔病毒体积、每排复孔数、每排病变细胞总数。均为 12 排十倍梯度（10⁰–10⁻¹¹）。MOI 部分输入细胞数、目标 MOI、病毒滴度。</li>
                 <li><strong>计算：</strong>TU 模式：平均每孔病变细胞数 = 病变细胞总数 ÷ 复孔数；该排 TU/mL = 平均每孔 ÷ 该排病毒等效体积（μL）× 1000。<br>
                 TCID50（Reed-Muench）：累计阳性自最稀排向浓端累计、累计阴性自最浓排向稀端累计（均含本排），取累计病变率 ≥50% 的最稀排为上排；PD = (上排% − 50) / (上排% − 下排%)；终点指数 = 上排指数 − PD；TCID50/mL = 10^(−终点指数) × 1000 / 接种体积。<br>
+                TCID50（Spearman-Kärber）：log₁₀(TCID50/mL) = (Σ(每排阳性孔数 ÷ 复孔数) − 0.5) + log₁₀(1000 ÷ 接种体积)，Σ 对所有排求和（未填排按同上的浓全阳/稀全阴假定）。<br>
                 所需病毒体积 (μL) = (细胞数 × MOI / 滴度) × 1000。</li>
             </ul>
         </div>
@@ -1459,14 +1460,14 @@
             });
         }
         // TCID50 表:排 | 稀释倍数 | 阳性孔数(必填) | 病变率 | 累计病变率
-        let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>阳性孔数（必填）</th><th>病变率</th><th>累计病变率</th></tr></thead><tbody>`;
+        let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>阳性孔数（必填）</th><th>病变率</th><th class="cum-col">累计病变率</th></tr></thead><tbody>`;
         for (let r = 1; r <= TITER_ROWS; r++) {
             html += `<tr>
                 <td>${r}</td>
                 <td>10<sup>${1-r}</sup></td>
                 <td><input type="number" id="titer_row_${r}_pos" min="0" max="8" value="${titerSavedValues[`titer_row_${r}_pos`] ?? ''}" style="width:70px;"></td>
                 <td id="titer_row_${r}_rate">—</td>
-                <td id="titer_row_${r}_cum">—</td>
+                <td class="cum-col" id="titer_row_${r}_cum">—</td>
             </tr>`;
         }
         html += `</tbody></table>`;
@@ -1498,13 +1499,17 @@
         const repeats = Math.min(8, Math.max(1, parseInt(document.getElementById('titer_repeats').value) || 1));
 
         // 方法切换:显隐输入字段与表格
+        const isTCID = method === 'tcid50' || method === 'spearman';
         document.getElementById('titer_field_firstvol').classList.toggle('hidden-input', method !== 'tu');
-        document.getElementById('titer_field_inocvol').classList.toggle('hidden-input', method !== 'tcid50');
-        document.getElementById('titer_table_tcid50_wrap').classList.toggle('hidden-input', method !== 'tcid50');
+        document.getElementById('titer_field_inocvol').classList.toggle('hidden-input', !isTCID);
+        document.getElementById('titer_table_tcid50_wrap').classList.toggle('hidden-input', !isTCID);
         document.getElementById('titer_table_tu_wrap').classList.toggle('hidden-input', method !== 'tu');
+        document.querySelectorAll('#titer_table_tcid50 .cum-col').forEach(c => c.classList.toggle('hidden-input', method === 'spearman'));
         document.getElementById('titer_table_hint').textContent = method === 'tu'
             ? '12 排梯度稀释。每排填写该排所有复孔的病变细胞总数,按 TU 公式换算每排 TU/mL'
-            : '12 排梯度稀释。只需填 50% 端点附近的连续几排阳性孔数;未填的更浓排视为全阳性、更稀排视为全阴性(标 *)';
+            : (method === 'spearman'
+                ? '12 排梯度稀释。只需填 50% 端点附近的连续几排阳性孔数;未填的更浓排视为全阳性、更稀排视为全阴性(标 *)。按 Spearman-Kärber 公式计算'
+                : '12 排梯度稀释。只需填 50% 端点附近的连续几排阳性孔数;未填的更浓排视为全阳性、更稀排视为全阴性(标 *)');
 
         let html = '';
         const outputs = {};
@@ -1594,6 +1599,15 @@
             } else if (inocVol <= 0) {
                 html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">每孔接种体积需大于 0</div></div>`;
                 outputs['TCID50'] = '接种体积无效';
+            } else if (method === 'spearman') {
+                // Spearman-Kärber:log₁₀(TCID50/接种体积) = Σ(每排阳性孔数/复孔数) − 0.5
+                const sumP = effective.reduce((a, p) => a + p, 0) / repeats;
+                const log10PerMl = (sumP - 0.5) + Math.log10(1000 / inocVol);
+                const linear = Math.pow(10, log10PerMl);
+                const filledVals = posCounts.filter(p => p !== null);
+                const allFull = filledVals.length > 0 && filledVals.every(p => p === repeats);
+                html = `<div class="result-badge"><label>log₁₀(TCID50/mL)</label><div class="val" style="color:var(--primary-dark);">${log10PerMl.toFixed(2)}</div></div><div class="result-badge"><label>TCID50 (个/mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(linear)}</div></div><div class="result-badge"><label>Σ 病变率(所有排)</label><div class="val">${(sumP * 100).toFixed(1)}%</div></div>${allFull ? `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>注意</label><div class="val" style="color:#d97706; font-size:1rem;">已填排均为全阳性,TCID50 实际可能更高</div></div>` : ''}<div class="formula-line">Spearman-Kärber:log₁₀(TCID50/mL) = (Σ(每排阳性孔数 ÷ 复孔数) − 0.5) + log₁₀(1000 ÷ 接种体积)</div>`;
+                outputs['TCID50'] = `log10=${log10PerMl.toFixed(2)} (${toSciText(linear)}/mL)`;
             } else {
                 let above = 0, below = 0;
                 for (let r = TITER_ROWS; r >= 1; r--) {
@@ -1630,7 +1644,8 @@
         debounceRecord('titer', () => {
             const fields = { titer_method: method, titer_first_vol: document.getElementById('titer_first_vol').value, titer_repeats: document.getElementById('titer_repeats').value, titer_inoc_vol: document.getElementById('titer_inoc_vol').value };
             for (let r = 1; r <= TITER_ROWS; r++) { fields[`titer_row_${r}_count`] = document.getElementById(`titer_row_${r}_count`).value; fields[`titer_row_${r}_pos`] = document.getElementById(`titer_row_${r}_pos`).value; }
-            recordHistory('titer', { '计算方法': method === 'tu' ? 'TU' : 'TCID50', '首孔体积': `${document.getElementById('titer_first_vol').value} μL`, '复孔数': repeats, '接种体积': `${document.getElementById('titer_inoc_vol').value} μL` }, outputs, fields);
+            const methodLabel = method === 'tu' ? 'TU' : (method === 'spearman' ? 'TCID50(Spearman-Kärber)' : 'TCID50(Reed-Muench)');
+            recordHistory('titer', { '计算方法': methodLabel, '首孔体积': `${document.getElementById('titer_first_vol').value} μL`, '复孔数': repeats, '接种体积': `${document.getElementById('titer_inoc_vol').value} μL` }, outputs, fields);
         });
     }
     function updateMOI() {
