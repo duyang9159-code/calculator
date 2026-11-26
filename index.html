@@ -1449,14 +1449,22 @@
 
     const TITER_ROWS = 12;
 
+    let titerSavedValues = {};
     function renderTiterTables() {
+        // 合并当前输入值到缓存,重渲染不丢值(与重组模块同模式)
+        for (let r = 1; r <= TITER_ROWS; r++) {
+            ['count','pos'].forEach(s => {
+                const el = document.getElementById(`titer_row_${r}_${s}`);
+                if (el) titerSavedValues[`titer_row_${r}_${s}`] = el.value;
+            });
+        }
         // TCID50 表:排 | 稀释倍数 | 阳性孔数(必填) | 病变率 | 累计病变率
         let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>阳性孔数（必填）</th><th>病变率</th><th>累计病变率</th></tr></thead><tbody>`;
         for (let r = 1; r <= TITER_ROWS; r++) {
             html += `<tr>
                 <td>${r}</td>
                 <td>10<sup>${1-r}</sup></td>
-                <td><input type="number" id="titer_row_${r}_pos" min="0" max="8" style="width:70px;"></td>
+                <td><input type="number" id="titer_row_${r}_pos" min="0" max="8" value="${titerSavedValues[`titer_row_${r}_pos`] ?? ''}" style="width:70px;"></td>
                 <td id="titer_row_${r}_rate">—</td>
                 <td id="titer_row_${r}_cum">—</td>
             </tr>`;
@@ -1470,7 +1478,7 @@
             html += `<tr>
                 <td>${r}</td>
                 <td>10<sup>${1-r}</sup></td>
-                <td><input type="number" id="titer_row_${r}_count" min="0" style="width:70px;" placeholder="0"></td>
+                <td><input type="number" id="titer_row_${r}_count" min="0" value="${titerSavedValues[`titer_row_${r}_count`] ?? ''}" style="width:70px;" placeholder="0"></td>
                 <td id="titer_row_${r}_avg">—</td>
                 <td id="titer_row_${r}_titer">—</td>
             </tr>`;
@@ -1528,12 +1536,18 @@
                 const el = document.getElementById(`titer_row_${r}_pos`);
                 let pos;
                 if (el && el.value !== '') {
-                    pos = Math.min(repeats, Math.max(0, parseInt(el.value) || 0));
-                    if (parseInt(el.value) !== pos) el.value = pos;
-                } else { pos = null; missingPos = true; }
+                    const raw = Math.max(0, parseInt(el.value) || 0);
+                    pos = Math.min(repeats, raw);
+                    document.getElementById(`titer_row_${r}_rate`).textContent = repeats > 0
+                        ? Math.round(pos / repeats * 100) + '%' + (raw > repeats ? ' ⚠' : '')
+                        : '—';
+                } else {
+                    pos = null;
+                    missingPos = true;
+                    document.getElementById(`titer_row_${r}_rate`).textContent = '—';
+                }
                 posCounts.push(pos);
                 if (pos > 0) anyPos = true;
-                document.getElementById(`titer_row_${r}_rate`).textContent = repeats > 0 && pos !== null ? Math.round(pos / repeats * 100) + '%' : '—';
             }
             // Reed-Muench 累计(含本排),供累计病变率列与端点计算
             const effective = posCounts.map(p => p === null ? 0 : p);
