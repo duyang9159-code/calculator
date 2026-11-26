@@ -705,7 +705,7 @@
         <div class="guide-card">
             <div class="guide-card-header">7. 病毒滴度与 MOI 计算</div>
             <ul>
-                <li><strong>输入：</strong>选择计算方法：TCID50（Reed–Muench）填每排阳性孔数、每排复孔数、每孔接种体积；TU（病变细胞计数）填首孔病毒体积、每排复孔数、每排病变细胞总数。均为 12 排十倍梯度（10⁰–10⁻¹¹）。MOI 部分输入细胞数、目标 MOI、病毒滴度。</li>
+                <li><strong>输入：</strong>选择计算方法：TCID50（Reed–Muench）只需填 50% 端点附近的连续几排阳性孔数（未填的更浓排视为全阳性、更稀排视为全阴性），另填每排复孔数、每孔接种体积；TU（病变细胞计数）填首孔病毒体积、每排复孔数、每排病变细胞总数。均为 12 排十倍梯度（10⁰–10⁻¹¹）。MOI 部分输入细胞数、目标 MOI、病毒滴度。</li>
                 <li><strong>计算：</strong>TU 模式：平均每孔病变细胞数 = 病变细胞总数 ÷ 复孔数；该排 TU/mL = 平均每孔 ÷ 该排病毒等效体积（μL）× 1000。<br>
                 TCID50（Reed-Muench）：累计阳性自最稀排向浓端累计、累计阴性自最浓排向稀端累计（均含本排），取累计病变率 ≥50% 的最稀排为上排；PD = (上排% − 50) / (上排% − 下排%)；终点指数 = 上排指数 − PD；TCID50/mL = 10^(−终点指数) × 1000 / 接种体积。<br>
                 所需病毒体积 (μL) = (细胞数 × MOI / 滴度) × 1000。</li>
@@ -1504,7 +1504,7 @@
         document.getElementById('titer_table_tu_wrap').classList.toggle('hidden-input', method !== 'tu');
         document.getElementById('titer_table_hint').textContent = method === 'tu'
             ? '12 排梯度稀释。每排填写该排所有复孔的病变细胞总数,按 TU 公式换算每排 TU/mL'
-            : '12 排梯度稀释。每排填写阳性孔数(必填),按 Reed–Muench 法计算 TCID50';
+            : '12 排梯度稀释。只需填 50% 端点附近的连续几排阳性孔数;未填的更浓排视为全阳性、更稀排视为全阴性(标 *)';
 
         let html = '';
         const outputs = {};
@@ -1531,7 +1531,7 @@
         } else {
             const inocVol = parseFloat(document.getElementById('titer_inoc_vol').value) || 0;
             const posCounts = [];
-            let missingPos = false, anyPos = false;
+            let filledMin = 0, filledMax = 0;
             for (let r = 1; r <= TITER_ROWS; r++) {
                 const el = document.getElementById(`titer_row_${r}_pos`);
                 let pos;
@@ -1543,14 +1543,35 @@
                         : '—';
                 } else {
                     pos = null;
-                    missingPos = true;
                     document.getElementById(`titer_row_${r}_rate`).textContent = '—';
                 }
                 posCounts.push(pos);
-                if (pos > 0) anyPos = true;
+                if (pos !== null) {
+                    if (!filledMin) filledMin = r;
+                    filledMax = r;
+                }
             }
+            // 未填排假定:比所填范围更浓(排号更小)视为全阳性,更稀视为全阴性
+            const gapRows = [];
+            if (filledMin) for (let r = filledMin; r <= filledMax; r++) if (posCounts[r - 1] === null) gapRows.push(r);
+            const effective = posCounts.map((p, i) => {
+                const r = i + 1;
+                if (p !== null) return p;
+                if (filledMin && r < filledMin) return repeats;
+                return 0;
+            });
+            // 病变率列对假定排标 *
+            if (filledMin && repeats > 0) {
+                for (let r = 1; r <= TITER_ROWS; r++) {
+                    if (posCounts[r - 1] === null) {
+                        const assumed = r < filledMin ? repeats : 0;
+                        document.getElementById(`titer_row_${r}_rate`).textContent = Math.round(assumed / repeats * 100) + '%*';
+                    }
+                }
+            }
+            const anyFilledPos = posCounts.some(p => p !== null && p > 0);
+            const anyPos = effective.some(p => p > 0);
             // Reed-Muench 累计(含本排),供累计病变率列与端点计算
-            const effective = posCounts.map(p => p === null ? 0 : p);
             const cumPos = new Array(TITER_ROWS + 1).fill(0);
             let acc = 0;
             for (let r = TITER_ROWS; r >= 1; r--) { acc += effective[r - 1]; cumPos[r] = acc; }
@@ -1561,12 +1582,15 @@
                 const total = cumPos[r] + cumNeg[r];
                 document.getElementById(`titer_row_${r}_cum`).textContent = total > 0 ? Math.round(cumPos[r] / total * 100) + '%' : '—';
             }
-            if (missingPos) {
-                html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">请填写每排阳性孔数后再计算 TCID50</div></div>`;
+            if (!filledMin) {
+                html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">请填写阳性孔数后再计算 TCID50(只需填 50% 端点附近的连续几排)</div></div>`;
                 outputs['TCID50'] = '缺少阳性孔数';
-            } else if (!anyPos) {
-                html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">未检出病变,建议提高病毒浓度或减少稀释</div></div>`;
-                outputs['TCID50'] = '未检出病变';
+            } else if (gapRows.length) {
+                html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">第 ${gapRows[0]}–${gapRows[gapRows.length - 1]} 排之间不能留空,请补全 50% 端点附近的连续排</div></div>`;
+                outputs['TCID50'] = '所填排之间留空';
+            } else if (!anyFilledPos) {
+                html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">所填排均无阳性(0),请检查更浓(排号更小)的排</div></div>`;
+                outputs['TCID50'] = '所填排均无阳性';
             } else if (inocVol <= 0) {
                 html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">每孔接种体积需大于 0</div></div>`;
                 outputs['TCID50'] = '接种体积无效';
