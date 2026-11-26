@@ -1449,7 +1449,7 @@
     const TITER_ROWS = 12;
 
     function renderTiterTable() {
-        let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>病变细胞数</th><th>平均每孔病变细胞数</th><th>阳性孔数(可选)</th><th id="titer_value_header">该排 TU/mL</th></tr></thead><tbody>`;
+        let html = `<table class="lab-table"><thead><tr><th>排</th><th>稀释倍数</th><th>病变细胞数</th><th>平均每孔病变细胞数</th><th>阳性孔数（TCID50必填）</th><th id="titer_value_header">该排 TU/mL</th></tr></thead><tbody>`;
         for (let r = 1; r <= TITER_ROWS; r++) {
             html += `<tr>
                 <td>${r}</td>
@@ -1479,7 +1479,7 @@
         document.getElementById('titer_value_header').textContent = method === 'tu' ? '该排 TU/mL' : '该排参考 TU/mL';
         document.getElementById('titer_table_hint').textContent = method === 'tu'
             ? '12 排梯度稀释。每排填写所有复孔的病变细胞总数，按 TU 标准公式换算'
-            : '12 排梯度稀释。每排填写阳性孔数，按 Reed–Muench 法计算 TCID50。病变细胞数可用于参考 TU';
+            : '12 排梯度稀释。TCID50 方法必须填写阳性孔数，TU 方法填写病变细胞总数';
 
         for (let r = 1; r <= TITER_ROWS; r++) {
             const countEl = document.getElementById(`titer_row_${r}_count`);
@@ -1507,7 +1507,8 @@
                 : `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TU</label><div class="val" style="color:#d97706; font-size:1rem;">请填写至少一排病变细胞数</div></div>`;
             outputs['TU'] = valid.length ? '各排结果见表格' : '暂无有效数据';
         } else {
-            const effectivePos = posCounts.map((value, index) => value === null ? ((counts[index] > 0 && counts[index] >= repeats) ? repeats : 0) : value);
+            const missingPos = posCounts.some(value => value === null);
+            const effectivePos = posCounts.map(value => value === null ? 0 : value);
             const anyCells = counts.some(c => c > 0);
             const positiveRows = effectivePos.some(p => p > 0);
             if (!anyCells) {
@@ -1516,6 +1517,9 @@
             } else if (inocVol <= 0) {
                 html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">每孔接种体积需大于 0</div></div>`;
                 outputs['TCID50'] = '接种体积无效';
+            } else if (missingPos) {
+                html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">请填写每排阳性孔数后再计算 TCID50</div></div>`;
+                outputs['TCID50'] = '缺少阳性孔数';
             } else if (!positiveRows) {
                 html = `<div class="result-badge" style="background:#fef3c7; border-color:#fcd34d;"><label>TCID50</label><div class="val" style="color:#d97706; font-size:1rem;">按当前阳性孔数无法确定终点</div></div>`;
                 outputs['TCID50'] = '无法确定终点';
@@ -1551,7 +1555,7 @@
                         const endpoint = (1 - above) - pd;
                         const log10PerMl = -endpoint + Math.log10(1000 / inocVol);
                         const linear = Math.pow(10, log10PerMl);
-                        html = `<div class="result-badge"><label>log₁₀(TCID50/mL)</label><div class="val" style="color:var(--primary-dark);">${log10PerMl.toFixed(2)}</div></div><div class="result-badge"><label>TCID50 (个/mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(linear)}</div></div><div class="result-badge"><label>终点稀释度</label><div class="val">10<sup>${endpoint.toFixed(2)}</sup> 稀释</div></div><div class="formula-line">Reed–Muench 法。优先使用阳性孔数列，未填写的排按病变细胞总数与复孔数作近似判定。</div>`;
+                        html = `<div class="result-badge"><label>log₁₀(TCID50/mL)</label><div class="val" style="color:var(--primary-dark);">${log10PerMl.toFixed(2)}</div></div><div class="result-badge"><label>TCID50 (个/mL)</label><div class="val" style="color:var(--primary-dark);">${toSciSup(linear)}</div></div><div class="result-badge"><label>终点稀释度</label><div class="val">10<sup>${endpoint.toFixed(2)}</sup> 稀释</div></div><div class="formula-line">Reed–Muench 法。使用每排阳性孔数按 Reed–Muench 法计算。</div>`;
                         outputs['TCID50'] = `log10=${log10PerMl.toFixed(2)} (${toSciText(linear)}/mL)`;
                     }
                 }
